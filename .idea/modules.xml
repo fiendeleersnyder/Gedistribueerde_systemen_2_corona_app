@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Bar_Owner/Bar_Owner.iml" filepath="$PROJECT_DIR$/Bar_Owner/Bar_Owner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Registrar/Registrar.iml" filepath="$PROJECT_DIR$/Registrar/Registrar.iml" />
+      <module fileurl="file://$PROJECT_DIR$/User/User.iml" filepath="$PROJECT_DIR$/User/User.iml" />
+      <module fileurl="file://$PROJECT_DIR$/corona.iml" filepath="$PROJECT_DIR$/corona.iml" />
+    </modules>
+  </component>
+</project>
