@@ -7,6 +7,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -34,13 +35,13 @@ public class Main {
     public BitMatrix generate_qrcode(String name, String pseudonym) throws NoSuchAlgorithmException, UnsupportedEncodingException, WriterException {
         Random random = new Random();
         int number = random.nextInt();
-        String data = pseudonym + number;
+        String data = pseudonym + "," +  number;
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
-        byte[] hash = md.digest(data.getBytes("UTF-8"));
-        String result_string = number + name + new String(hash);
-        byte[] result = result_string.getBytes("UTF-8");
-        BitMatrix matrix = new MultiFormatWriter().encode(new String(result, "UTF-8"), BarcodeFormat.QR_CODE, 25, 25);
-        return matrix;
+        byte[] hash = md.digest(data.getBytes(StandardCharsets.UTF_8));
+        String result_string = number + "," + name + "," + new String(hash);
+        System.out.println(result_string);
+        byte[] result = result_string.getBytes(StandardCharsets.UTF_8);
+        return new MultiFormatWriter().encode(new String(result, StandardCharsets.UTF_8), BarcodeFormat.QR_CODE, 25, 25);
     }
 
     public static void main(String args[]) throws NotBoundException, RemoteException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException, WriterException {
@@ -67,7 +68,7 @@ public class Main {
         String pseudonym = main.get_pseudonym(name, location);
         System.out.println(pseudonym);
 
-        BitMatrix qrcode = main.generate_qrcode(name, location);
+        BitMatrix qrcode = main.generate_qrcode(name, pseudonym);
         System.out.println(qrcode);
 
     }
