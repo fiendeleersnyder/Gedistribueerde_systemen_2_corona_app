@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -13,24 +14,31 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 
 public class Main {
     Registry myRegistry;
     Registrar registrar;
+    MixingProxy mixingProxy;
     JFrame frame = new JFrame("Corona-app");
-    ArrayList<ArrayList<String>> tokens = new ArrayList<>();
-    ArrayList<String> tokensVandaag = new ArrayList<>();
+    ArrayList<ArrayList<byte[]>> tokens = new ArrayList<>();
+    ArrayList<byte[]> tokensVandaag;
+    int aantalBezoeken = 0;
     String name;
     String phone_number;
     String barcode;
     int random_number;
     String CF;
     String hash;
+    LocalTime localTime;
+    Capsule capsule;
+
 
     public Main() throws RemoteException, NotBoundException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, SignatureException, InvalidKeyException {
         myRegistry = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistry.lookup("Registrar");
+        mixingProxy = (MixingProxy) myRegistry.lookup("MixingProxy");
 
         JLabel text = new JLabel();
         text.setText("Scan QR-code: ");
@@ -41,9 +49,17 @@ public class Main {
         b.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 barcode = barcodeField.getText();
+                capsule = new Capsule(LocalDateTime.now().toLocalTime(), tokensVandaag.get(aantalBezoeken), barcode.split(",")[2].getBytes(StandardCharsets.UTF_8));
                 random_number = Integer.parseInt(barcode.split(",")[0]);
                 CF = barcode.split(",")[1];
                 hash = barcode.split(",")[2];
+                localTime = LocalDateTime.now().toLocalTime();
+                aantalBezoeken++;
+                try {
+                    mixingProxy.sendCapsule(capsule, phone_number);
+                } catch (IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException ex) {
+                    ex.printStackTrace();
+                }
             }
         });
 
@@ -70,17 +86,6 @@ public class Main {
         }
         tokensVandaag = tokens.get(dag);
 
-
-
-    }
-
-    public void actionPerformed(ActionEvent e)
-    {
-        String s = e.getActionCommand();
-        if (s.equals("submit")) {
-            // set the text of the label to the text of the field
-
-        }
     }
 
     public void enrollment_phase() {
@@ -92,8 +97,8 @@ public class Main {
 
     public void start() {
         if(tokens.size() != 0) {
-            for (ArrayList<String> lijst: tokens) {
-                for (String token: lijst) {
+            for (ArrayList<byte[]> lijst: tokens) {
+                for (byte[] token: lijst) {
                     System.out.println(token); //vreemde tokens, is dit het???
                 }
             }

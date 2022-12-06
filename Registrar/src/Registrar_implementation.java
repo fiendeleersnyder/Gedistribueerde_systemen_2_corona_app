@@ -3,12 +3,16 @@ import at.favre.lib.crypto.HKDF;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.swing.*;
+import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 
@@ -17,6 +21,11 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     final int AMOUNT_OF_TOKENS = 50;
     final int DAYS = 31;
     ArrayList<String> phone_numbers;
+    Map<String, ArrayList<ArrayList<byte[]>>> mapping = new HashMap();
+    JFrame frame= new JFrame("Content database");
+    JLabel text = new JLabel("Content database: ");
+    JPanel p = new JPanel();
+    Map<String, PublicKey> publicKeys = new HashMap<>();
 
     public Registrar_implementation() throws RemoteException, NoSuchAlgorithmException {
         int keySize = 128;
@@ -26,6 +35,38 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         secret_key = keyGenerator.generateKey();
 
         phone_numbers = new ArrayList<>();
+
+        p.add(text);
+        p.setSize(new Dimension(300,600));
+        frame.add(p);
+
+        frame.setSize(300,600);
+        frame.pack();
+        frame.show();
+        frame.setVisible(true);
+    }
+
+    public void updateGUI() {
+        JLabel number = new JLabel();
+        number.setText(phone_numbers.get(phone_numbers.size()-1));
+        p.add(number);
+        frame.show();
+
+    }
+
+    @Override
+    public PublicKey getPublicKey(String phone_number) throws NoSuchAlgorithmException {
+        for (Map.Entry<String, PublicKey> entry : publicKeys.entrySet()) {
+            if (entry.getKey().equals(phone_number)) {
+                return entry.getValue();
+            }
+        }
+
+        SecureRandom secureRandom = new SecureRandom();
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048, secureRandom);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        return keyPair.getPublic();
     }
 
     //geen idee als dit goed is, momenteel wordt 1 pseudonym gemaakt maar mss handig als het voor een hele maand kan
@@ -53,8 +94,8 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     }
 
     @Override
-    public ArrayList<ArrayList<String>> get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SignatureException {
-        ArrayList<ArrayList<String>> tokens = new ArrayList<>();
+    public ArrayList<ArrayList<byte[]>> get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SignatureException {
+        ArrayList<ArrayList<byte[]>> tokens = new ArrayList<>();
         boolean got_tokens = false;
         for (String number : phone_numbers) {
             if (phone_number.equalsIgnoreCase(number)) {
@@ -65,7 +106,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             return null;
         }
         for (int i = 0; i < DAYS; i++) {
-            ArrayList<String> tokensVoorDag = new ArrayList<>(AMOUNT_OF_TOKENS);
+            ArrayList<byte[]> tokensVoorDag = new ArrayList<>(AMOUNT_OF_TOKENS);
             Random random = new Random();
             int number;
             LocalDateTime now = LocalDateTime.now();
@@ -77,16 +118,19 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(keyPair.getPrivate());
+            publicKeys.put(phone_number, keyPair.getPublic());
 
             for (int j = 0; j < AMOUNT_OF_TOKENS; j++) {
                 number = random.nextInt();
-                signature.update(Integer.toString(number + day).getBytes());
+                signature.update((number + "," + day).getBytes());
                 digitalSignature = signature.sign();
-                tokensVoorDag.add(new String(digitalSignature));
+                tokensVoorDag.add(digitalSignature);
             }
             tokens.add(tokensVoorDag);
         }
         phone_numbers.add(phone_number);
+        mapping.put(phone_number, tokens);
+        updateGUI();
         return tokens;
     }
 }

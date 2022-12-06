@@ -39,7 +39,7 @@ public class Main {
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
         byte[] hash = md.digest(data.getBytes(StandardCharsets.UTF_8));
         String result_string = number + "," + name + "," + new String(hash);
-        System.out.println(result_string);
+        System.out.println(number + "," + name + "," + hash);
         byte[] result = result_string.getBytes(StandardCharsets.UTF_8);
         return new MultiFormatWriter().encode(new String(result, StandardCharsets.UTF_8), BarcodeFormat.QR_CODE, 25, 25);
     }
