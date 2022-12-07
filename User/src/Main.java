@@ -1,6 +1,7 @@
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -17,15 +18,19 @@ import java.security.SignatureException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
     Registry myRegistry;
+    Registry mixingRegistry;
     Registrar registrar;
     MixingProxy mixingProxy;
     Doctor dokter;
     JFrame frame = new JFrame("Corona-app");
     ArrayList<ArrayList<byte[]>> tokens = new ArrayList<>();
     ArrayList<byte[]> tokensVandaag;
+    HashMap<LocalTime, byte[]> tijdTokens = new HashMap<>();
     int aantalBezoeken = 0;
     String name;
     String phone_number;
@@ -58,6 +63,7 @@ public class Main {
                 CF = barcode.split(",")[1];
                 hash = barcode.split(",")[2];
                 localTime = LocalDateTime.now().toLocalTime();
+                tijdTokens.put(localTime, tokensVandaag.get(aantalBezoeken));
                 aantalBezoeken++;
                 try {
                     mixingProxy.sendCapsule(capsule, phone_number);
@@ -158,6 +164,8 @@ public class Main {
     }
 
     public static void main(String args[]) throws NotBoundException, RemoteException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, SignatureException {
+        System.setProperty("javax.net.ssl.trustStore","Truststore/truststore.ks");
+        System.setProperty("javax.net.ssl.trustStorePassword","truststore");
         Main main = new Main();
         main.start();
 
