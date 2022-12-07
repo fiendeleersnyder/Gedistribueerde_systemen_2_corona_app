@@ -126,4 +126,5 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         updateGUI();
         return tokens;
     }
+
 }

@@ -23,7 +23,7 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     }
 
     @Override
-    public byte[] sendCapsule(Capsule capsule, String phone_number) throws IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+    public byte[] sendCapsule(Capsule capsule, String phone_number) throws IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, RemoteException {
         boolean alreadyUsed = false;
         for (byte[] token: usedTokens) {
             if (token == capsule.getToken()) {

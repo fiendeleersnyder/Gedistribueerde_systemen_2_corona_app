@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -21,6 +22,7 @@ public class Main {
     Registry myRegistry;
     Registrar registrar;
     MixingProxy mixingProxy;
+    Doctor dokter;
     JFrame frame = new JFrame("Corona-app");
     ArrayList<ArrayList<byte[]>> tokens = new ArrayList<>();
     ArrayList<byte[]> tokensVandaag;
@@ -38,7 +40,9 @@ public class Main {
     public Main() throws RemoteException, NotBoundException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, SignatureException, InvalidKeyException {
         myRegistry = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistry.lookup("Registrar");
-        mixingProxy = (MixingProxy) myRegistry.lookup("MixingProxy");
+        mixingRegistry = LocateRegistry.getRegistry("127.0.0.1", 4501, new SslRMIClientSocketFactory());
+        mixingProxy = (MixingProxy) mixingRegistry.lookup("MixingProxy");
+        dokter = (Doctor) myRegistry.lookup("Doctor");
 
         JLabel text = new JLabel();
         text.setText("Scan QR-code: ");
@@ -69,6 +73,50 @@ public class Main {
         p.add(b);
         p.setSize(new Dimension(300,600));
         frame.add(p);
+
+        JButton button = new JButton("Send log to doctor");
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try{
+                    String dag = LocalDateTime.now().toString();
+                    FileWriter fileWriter = new FileWriter("log.txt");
+                    BufferedWriter writer = new BufferedWriter(fileWriter);
+                    writer.write(dag + "\n");
+                    for(Map.Entry<LocalTime, byte[]> entry: tijdTokens.entrySet()) {
+                        //key is de tijd, value is de token
+                        writer.write(entry.getKey() + "\n" + entry.getValue() + "\n");
+                    }
+                    writer.write(hash + "\n");
+                    writer.write(random_number);
+                    fileWriter.close();
+                    writer.flush();
+                    writer.close();
+                }
+                catch  (IOException ex) {
+                    System.out.println("Error occurred. Try again.");
+                    ex.printStackTrace();
+                }
+
+                try{
+                    File clientpathfile = new File("log.txt");//hier pathname mogelijks nog aanpassen
+                    byte [] mydata=new byte[(int) clientpathfile.length()];
+                    FileInputStream in=new FileInputStream(clientpathfile);
+                    System.out.println("uploading to doctorserver...");
+                    in.read(mydata, 0, mydata.length);
+                    dokter.uploadFileToServer(mydata);
+                    in.close();
+                } catch (FileNotFoundException ex) {
+                    ex.printStackTrace();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        JPanel panel = new JPanel();
+        panel.add(button);
+        frame.add(panel);
 
         frame.setSize(300,600);
         frame.pack();
