@@ -8,7 +8,7 @@ public class Main {
     Registrar registrar;
     private void startMixingProxy(){
         try {
-            Registry registry = LocateRegistry.createRegistry(2019, new SslRMIClientSocketFactory(), new SslRMIServerSocketFactory());
+            Registry registry = LocateRegistry.createRegistry(2019);//, new SslRMIClientSocketFactory(), new SslRMIServerSocketFactory());
             //Registry registry = LocateRegistry.createRegistry(9000, new SslRMIClientSocketFactory(), new SslRMIServerSocketFactory());
             registry.bind("MixingProxy", new MixingProxy_implementation());
 
