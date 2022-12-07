@@ -44,6 +44,8 @@ public class Main {
     }
 
     public static void main(String[] args) throws NotBoundException, RemoteException {
+        System.setProperty("javax.net.ssl.trustStore","Truststore/truststore.ks");
+        System.setProperty("javax.net.ssl.trustStorePassword","truststore");
         Main main = new Main();
         main.start();
     }
