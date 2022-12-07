@@ -36,9 +36,9 @@ public class Main {
     LocalTime localTime;
     Capsule capsule;
 
-
+    //user
     public Main() throws RemoteException, NotBoundException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, SignatureException, InvalidKeyException {
-        myRegistry = LocateRegistry.getRegistry("localhost", 4500);
+        myRegistry = LocateRegistry.getRegistry("127.0.0.1", 4500);
         registrar = (Registrar) myRegistry.lookup("Registrar");
         mixingRegistry = LocateRegistry.getRegistry("127.0.0.1", 4501, new SslRMIClientSocketFactory());
         mixingProxy = (MixingProxy) mixingRegistry.lookup("MixingProxy");

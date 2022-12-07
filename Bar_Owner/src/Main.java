@@ -21,7 +21,7 @@ import java.util.Random;
 public class Main {
     Registry myRegistry;
     Registrar registrar;
-
+    //bar owner
     public Main() throws RemoteException, NotBoundException {
         myRegistry = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistry.lookup("Registrar");
