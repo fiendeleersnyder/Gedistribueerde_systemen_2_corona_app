@@ -5,10 +5,13 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import java.awt.*;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.*;
+import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +21,7 @@ import java.util.Random;
 
 public class Registrar_implementation extends UnicastRemoteObject implements Registrar{
     Key secret_key;
+    PrivateKey privateKey;
     final int AMOUNT_OF_TOKENS = 50;
     final int DAYS = 31;
     ArrayList<String> phone_numbers;
@@ -25,9 +29,17 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     JFrame frame= new JFrame("Content database");
     JLabel text = new JLabel("Content database: ");
     JPanel p = new JPanel();
-    Map<String, PublicKey> publicKeys = new HashMap<>();
 
-    public Registrar_implementation() throws RemoteException, NoSuchAlgorithmException {
+    public Registrar_implementation() throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, UnrecoverableKeyException {
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        String fileName = "Keystore/keystore.jks";
+        FileInputStream fis = new FileInputStream(fileName);
+        char[] password = "keystore".toCharArray();
+        keyStore.load(fis,password);
+        fis.close();
+
+        privateKey = (PrivateKey) keyStore.getKey("registrar", "registrar".toCharArray());
+
         int keySize = 128;
         String cipher ="AES"; // gebruiken we AES of iets anders???
         KeyGenerator keyGenerator = KeyGenerator.getInstance(cipher);
@@ -52,21 +64,6 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         p.add(number);
         frame.show();
 
-    }
-
-    @Override
-    public PublicKey getPublicKey(String phone_number) throws NoSuchAlgorithmException {
-        for (Map.Entry<String, PublicKey> entry : publicKeys.entrySet()) {
-            if (entry.getKey().equals(phone_number)) {
-                return entry.getValue();
-            }
-        }
-
-        SecureRandom secureRandom = new SecureRandom();
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048, secureRandom);
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-        return keyPair.getPublic();
     }
 
     //geen idee als dit goed is, momenteel wordt 1 pseudonym gemaakt maar mss handig als het voor een hele maand kan
@@ -112,13 +109,9 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             LocalDateTime now = LocalDateTime.now();
             int day = now.getDayOfMonth();
             byte[] digitalSignature;
-            SecureRandom secureRandom = new SecureRandom();
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(2048, secureRandom);
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
             Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(keyPair.getPrivate());
-            publicKeys.put(phone_number, keyPair.getPublic());
+            signature.initSign(privateKey);
 
             for (int j = 0; j < AMOUNT_OF_TOKENS; j++) {
                 number = random.nextInt();
