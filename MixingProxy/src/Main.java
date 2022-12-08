@@ -1,13 +1,16 @@
+import javax.rmi.ssl.SslRMIClientSocketFactory;
+import javax.rmi.ssl.SslRMIServerSocketFactory;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class Main {
 
-    private void startMixingProxy(){
+    private void startMixingProxy() {
         try {
-            Registry registry = LocateRegistry.createRegistry(4500);
+            System.setProperty("java.rmi.server.hostname", "localhost");
+            Registry registry = LocateRegistry.createRegistry(9000, new SslRMIClientSocketFactory(), new SslRMIServerSocketFactory());
 
-            registry.rebind("MixingProxy", new MixingProxy_implementation());
+            registry.bind("MixingProxy", new MixingProxy_implementation());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -16,6 +19,8 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        System.setProperty("javax.net.ssl.keyStore","keystore");
+        System.setProperty("javax.net.ssl.keyStorePassword","keystore");
         Main main = new Main();
         main.startMixingProxy();
     }

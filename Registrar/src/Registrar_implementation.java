@@ -5,13 +5,11 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import java.awt.*;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.*;
-import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +20,7 @@ import java.util.Random;
 public class Registrar_implementation extends UnicastRemoteObject implements Registrar{
     Key secret_key;
     PrivateKey privateKey;
+    PublicKey publicKey;
     final int AMOUNT_OF_TOKENS = 50;
     final int DAYS = 31;
     ArrayList<String> phone_numbers;
@@ -30,15 +29,12 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     JLabel text = new JLabel("Content database: ");
     JPanel p = new JPanel();
 
-    public Registrar_implementation() throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, UnrecoverableKeyException {
-        KeyStore keyStore = KeyStore.getInstance("JKS");
-        String fileName = "Keystore/keystore.jks";
-        FileInputStream fis = new FileInputStream(fileName);
-        char[] password = "keystore".toCharArray();
-        keyStore.load(fis,password);
-        fis.close();
-
-        privateKey = (PrivateKey) keyStore.getKey("registrar", "registrar".toCharArray());
+    public Registrar_implementation() throws IOException, NoSuchAlgorithmException {
+        KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
+        keyPairGen.initialize(2048);
+        KeyPair pair = keyPairGen.generateKeyPair();
+        privateKey = pair.getPrivate();
+        publicKey = pair.getPublic();
 
         int keySize = 128;
         String cipher ="AES"; // gebruiken we AES of iets anders???
@@ -93,7 +89,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     @Override
     public ArrayList<ArrayList<byte[]>> get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SignatureException {
         ArrayList<ArrayList<byte[]>> tokens = new ArrayList<>();
-        boolean got_tokens = false;
+        /*boolean got_tokens = false;
         for (String number : phone_numbers) {
             if (phone_number.equalsIgnoreCase(number)) {
                 got_tokens = true;
@@ -101,7 +97,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         }
         if (got_tokens) {
             return null;
-        }
+        }*/
         for (int i = 0; i < DAYS; i++) {
             ArrayList<byte[]> tokensVoorDag = new ArrayList<>(AMOUNT_OF_TOKENS);
             Random random = new Random();

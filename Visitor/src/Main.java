@@ -1,6 +1,7 @@
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -18,7 +19,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 
 public class Main {
-    Registry myRegistry;
+    Registry myRegistryRegistrar;
+    Registry myRegistryMixingProxy;
     Registrar registrar;
     MixingProxy mixingProxy;
     JFrame frame = new JFrame("Corona-app");
@@ -36,9 +38,10 @@ public class Main {
 
 
     public Main() throws RemoteException, NotBoundException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, SignatureException, InvalidKeyException {
-        myRegistry = LocateRegistry.getRegistry("localhost", 4500);
-        registrar = (Registrar) myRegistry.lookup("Registrar");
-        mixingProxy = (MixingProxy) myRegistry.lookup("MixingProxy");
+        myRegistryRegistrar = LocateRegistry.getRegistry("localhost", 4500);
+        registrar = (Registrar) myRegistryRegistrar.lookup("Registrar");
+        myRegistryMixingProxy = LocateRegistry.getRegistry("localhost", 9000, new SslRMIClientSocketFactory());
+        mixingProxy = (MixingProxy) myRegistryMixingProxy.lookup("MixingProxy");
 
         JLabel text = new JLabel();
         text.setText("Scan QR-code: ");
@@ -56,8 +59,9 @@ public class Main {
                 localTime = LocalDateTime.now().toLocalTime();
                 aantalBezoeken++;
                 try {
-                    mixingProxy.sendCapsule(capsule, phone_number);
-                } catch (IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException ex) {
+                    byte[] terug = mixingProxy.sendCapsule(capsule, phone_number);
+                    System.out.println(terug.toString());
+                } catch (IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | RemoteException ex) {
                     ex.printStackTrace();
                 }
             }
@@ -72,7 +76,7 @@ public class Main {
 
         frame.setSize(300,600);
         frame.pack();
-        frame.show();
+        //frame.show();
         frame.setVisible(true);
 
         name= "Fien De Leersnyder";
@@ -104,12 +108,14 @@ public class Main {
             }
         }
         else {
-            System.out.println("tokens was 0");
+            System.out.println("geen tokens gevonden");
         }
 
     }
 
     public static void main(String args[]) throws NotBoundException, RemoteException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, SignatureException {
+        System.setProperty("javax.net.ssl.trustStore","truststore");
+        System.setProperty("javax.net.ssl.trustStorePassword","keystore");
         Main main = new Main();
         main.start();
 

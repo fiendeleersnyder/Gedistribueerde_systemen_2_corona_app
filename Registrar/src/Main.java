@@ -7,7 +7,7 @@ public class Main {
         try {
             Registry registry = LocateRegistry.createRegistry(4500);
 
-            registry.rebind("Registrar", new Registrar_implementation());
+            registry.bind("Registrar", new Registrar_implementation());
         } catch (Exception e) {
             e.printStackTrace();
         }
