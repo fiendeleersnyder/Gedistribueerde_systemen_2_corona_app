@@ -23,6 +23,10 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     ArrayList <byte []> pseudonymList;
     ArrayList <usedToken> infectedTokens;
     ArrayList<Capsule> capsules;
+    ArrayList<Capsule> uninformedInfected;
+    JFrame frame;//= new JFrame("Matching Service");
+    JButton b;// = new JButton("Flush mixing queue");
+
 
     public MatchingService_implementation() throws RemoteException, NotBoundException {
         myRegistryRegistrar = LocateRegistry.getRegistry("localhost", 4500);
@@ -71,22 +75,30 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
                 String[] split= lijn.split(" ");
                 LocalTime begin = LocalTime.parse(split[1]);
                 LocalTime eind = LocalTime.parse(split[2]);
-                byte[] hash = split[3].getBytes(StandardCharsets.UTF_8);
+                String hash = split[3];
                 int randomnummer = Integer.parseInt(split[4]);
                 infectedTokens.add(new usedToken(begin, eind, hash, randomnummer));
             }
 
-            pseudonymList = registrar.getPseudonyms();
+            pseudonymList = registrar.getPseudonyms(); //moet nog worden aangepast zodat er enkel pseudonyms van 1 dag worden opgehaald
 
-            for (usedToken token: infectedTokens) {
-                Iterator<byte[]> iterator = pseudonymList.iterator();
-                while(iterator.hasNext()){
-                    byte [] pseudo = iterator.next();
-                    if (Arrays.equals(token.getHash(), makeHash(pseudo, token.getRandomNumber()))) {
-                        //if ()
+
+            if(capsules.size()!=0) {
+                for (usedToken token : infectedTokens) {
+                    ArrayList<Capsule> temp = capsules;
+                    Iterator<Capsule> iterator = temp.iterator();
+                    while (iterator.hasNext()) {
+                        Capsule capsule = iterator.next();
+                        if (Objects.equals(token.getHash(), capsule.getHash())) {
+                            if (checkTimeInterval(token.getBeginTijd(), token.getEindTijd(), capsule.getLocalTime())) {
+                                uninformedInfected.add(capsule);
+                                iterator.remove();
+                                System.out.println("found infected user");
+                            }
+                        }
                     }
+                    capsules = temp;
                 }
-
             }
         }
         else System.out.println("An error occurred: the signature provided by the doctor and the signature" +
@@ -101,6 +113,7 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     }
 
     public byte[] makeHash(byte[] pseudonym, int random) throws NoSuchAlgorithmException {
+
         String data = pseudonym + "," +  random;
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
         return md.digest(data.getBytes(StandardCharsets.UTF_8));

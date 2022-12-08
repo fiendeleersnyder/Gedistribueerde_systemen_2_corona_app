@@ -3,7 +3,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class Main {
-
     private void startMatchingService() {
         try {
             Registry registry = LocateRegistry.getRegistry("localhost",4500);
@@ -17,7 +16,7 @@ public class Main {
         }
         System.out.println("matching service is ready");
     }
-    //matching service
+
     public static void main(String[] args) {
         System.setProperty("javax.net.ssl.trustStore","truststore");
         System.setProperty("javax.net.ssl.trustStorePassword","keystore");

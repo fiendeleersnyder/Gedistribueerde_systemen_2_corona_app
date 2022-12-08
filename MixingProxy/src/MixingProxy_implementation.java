@@ -26,10 +26,9 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     PrivateKey privateKey;
     ArrayList<Token> usedTokens;
     ArrayList<Capsule> capsules;
-    JFrame frame= new JFrame("Mixing database");
-    JLabel text = new JLabel("Registrar database: ");
-    JButton b = new JButton("Flush queue");
-    JPanel p = new JPanel();
+    JFrame frame;//= new JFrame("Mixing database");
+    JLabel text;// = new JLabel("Registrar database: ");
+    JPanel p;// = new JPanel();
 
     public MixingProxy_implementation() throws IOException, NotBoundException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
         usedTokens = new ArrayList<>();
@@ -91,5 +90,16 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
             return signature.sign();
         }
 
+    }
+
+    @Override
+    public ArrayList<Capsule> getCapsules() throws RemoteException {
+        Collections.shuffle(capsules);
+        ArrayList<Capsule> temp = new ArrayList<>();
+        for (Capsule capsule: capsules) {
+            temp.add(capsule);
+        }
+        capsules.clear();
+        return temp;
     }
 }
