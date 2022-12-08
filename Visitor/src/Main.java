@@ -124,7 +124,7 @@ public class Main {
             try{
                 FileWriter fileWriter = new FileWriter("log.txt");
                 for(usedToken usedToken: gebruikteTokens) {
-                    fileWriter.write(usedToken.getTimeInterval() + " " + usedToken.getHash() + " " + usedToken.getRandomNumber() + "\n");
+                    fileWriter.write(usedToken + " " + usedToken.getBeginTijd() + " " + usedToken.getEindTijd() + " " + usedToken.getHash() + " " + usedToken.getRandomNumber() + "\n");
                 }
                 fileWriter.close();
             }
