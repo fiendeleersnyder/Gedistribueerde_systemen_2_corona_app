@@ -21,6 +21,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     Key secret_key;
     PrivateKey privateKey;
     PublicKey publicKey;
+    Signature signature = Signature.getInstance("SHA256withRSA");
     final int AMOUNT_OF_TOKENS = 50;
     final int DAYS = 31;
     ArrayList<String> phone_numbers;
@@ -106,7 +107,6 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             int day = i+1;
             byte[] digitalSignature;
 
-            Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(privateKey);
 
             for (int j = 0; j < AMOUNT_OF_TOKENS; j++) {
@@ -123,8 +123,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         return tokens;
     }
 
-    public boolean checkValidity(Token token) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        Signature signature = Signature.getInstance("SHA256withRSA");
+    public boolean checkValidity(Token token) throws InvalidKeyException, SignatureException {
         signature.initVerify(publicKey);
         signature.update((token.getRandomNumber() + "," + token.getDay()).getBytes());
         return signature.verify(token.getDigitalSignature());

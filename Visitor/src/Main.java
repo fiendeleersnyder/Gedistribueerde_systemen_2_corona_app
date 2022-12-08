@@ -1,13 +1,14 @@
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.imageio.ImageIO;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.security.*;
@@ -57,6 +58,16 @@ public class Main {
 
         gebruikteTokens = new ArrayList<>();
 
+        name= "Fien De Leersnyder";
+        phone_number = "0471283868";
+        //enrollment_phase();
+
+        JLabel textName = new JLabel();
+        textName.setText("Name: " + name);
+
+        JLabel textNumber = new JLabel();
+        textNumber.setText("Phone number: " + phone_number);
+
         JLabel text = new JLabel();
         text.setText("Scan QR-code: ");
 
@@ -64,6 +75,7 @@ public class Main {
 
         JButton b = new JButton("submit");
         JButton button = new JButton("Send log to doctor");
+        JLabel imageLabel = new JLabel();
         b.addActionListener(e -> {
             barcode = barcodeField.getText();
             barcodeField.setText("");
@@ -77,25 +89,37 @@ public class Main {
             //tijdTokens.put(localTime, tokensVandaag.get(aantalBezoeken));
             aantalBezoeken++;
             try {
-                byte[] terug = mixingProxy.sendCapsule(capsule, phone_number);
+                byte[] signedHash = mixingProxy.sendCapsule(capsule, phone_number);
                 Signature signature = Signature.getInstance("SHA256withRSA");
                 signature.initVerify(certMixingProxy.getPublicKey());
                 signature.update(hash);
-                boolean signed = signature.verify(terug);
+                boolean signed = signature.verify(signedHash);
                 if (signed) {
+                    System.out.println("Sign oke");
+                    usedToken = new usedToken(localTime,hash, random_number);
+                    gebruikteTokens.add(usedToken);
                     //identicon
+                    BufferedImage image = Identicon.generateIdenticons(signedHash, 150,150);
+                    File imageFile = new File("image.jpg");
+                    ImageIO.write(image, "jpg", imageFile);
+                    imageLabel.setIcon(new ImageIcon(image));
+                    imageLabel.setVisible(true);
+
                 }
 
-            } catch (IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | RemoteException | SignatureException ex) {
+            } catch (IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | SignatureException | IOException ex) {
                 ex.printStackTrace();
             }
         });
 
         JPanel p = new JPanel();
+        p.setSize(new Dimension(300,600));
+        p.add(textName);
+        p.add(textNumber);
         p.add(text);
         p.add(barcodeField);
         p.add(b);
-        p.setSize(new Dimension(300,600));
+        p.add(imageLabel);
         frame.add(p);
 
         button.addActionListener(e -> {
@@ -137,12 +161,7 @@ public class Main {
 
         frame.setSize(300,600);
         frame.pack();
-        //frame.show();
         frame.setVisible(true);
-
-        name= "Fien De Leersnyder";
-        phone_number = "0471283868";
-        //enrollment_phase();
 
         int dag = LocalDateTime.now().getDayOfMonth();
 
