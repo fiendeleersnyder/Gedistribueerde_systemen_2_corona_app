@@ -70,6 +70,5 @@ public class Main {
 
         BitMatrix qrcode = main.generate_qrcode(name, pseudonym);
         System.out.println(qrcode);
-
     }
 }

@@ -24,7 +24,7 @@ public class Main {
     MixingProxy mixingProxy;
     java.security.cert.Certificate certMixingProxy;
     Doctor doctor;
-    JFrame frame = new JFrame("Corona-app");
+    JFrame frame;// = new JFrame("Corona-app");
     ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
     ArrayList<Token> tokensVandaag;
     ArrayList<usedToken> gebruikteTokens;
@@ -46,6 +46,9 @@ public class Main {
         myRegistryMixingProxy = LocateRegistry.getRegistry("localhost", 9000, new SslRMIClientSocketFactory());
         mixingProxy = (MixingProxy) myRegistryMixingProxy.lookup("MixingProxy");
         doctor = (Doctor) myRegistryRegistrar.lookup("Doctor");
+        frame = new JFrame("Corona-app");
+        frame.setSize(new Dimension(1000,600));
+
 
         KeyStore keyStore = KeyStore.getInstance("JKS");
         String fileName = "keystore";
@@ -124,6 +127,7 @@ public class Main {
         p.add(leave);
         p.add(b);
         p.add(imageLabel);
+        p.setBackground(Color.RED);
         frame.add(p);
 
         button.addActionListener(e -> {
@@ -155,11 +159,12 @@ public class Main {
         JPanel panel = new JPanel();
         panel.add(button);
         panel.setSize(new Dimension(150,600));
+        panel.setBackground(Color.CYAN);
         frame.add(panel);
 
 
-        frame.setSize(1000,1000);
-        frame.pack();
+        //frame.setSize(1000,1000);
+        //frame.pack();
         frame.setVisible(true);
 
         int dag = LocalDateTime.now().getDayOfMonth();

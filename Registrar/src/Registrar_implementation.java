@@ -27,9 +27,9 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     ArrayList<String> phone_numbers;
     Map<String, ArrayList<ArrayList<Token>>> mapping = new HashMap();
     ArrayList<byte[]> pseudonymen;
-    JFrame frame= new JFrame("Registrar database");
-    JLabel text = new JLabel("Registrar database: ");
-    JPanel p = new JPanel();
+    JFrame frame;//= new JFrame("Registrar database");
+    JLabel text; // = new JLabel("Registrar database: ");
+    JPanel p;// = new JPanel();
 
     public Registrar_implementation() throws IOException, NoSuchAlgorithmException {
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
@@ -37,6 +37,9 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         KeyPair pair = keyPairGen.generateKeyPair();
         privateKey = pair.getPrivate();
         publicKey = pair.getPublic();
+        frame= new JFrame("Registrar database");
+        text = new JLabel("Registrar database: ");
+        p = new JPanel();
 
         int keySize = 128;
         String cipher ="AES"; // gebruiken we AES of iets anders???
@@ -46,14 +49,15 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
 
         phone_numbers = new ArrayList<>();
         pseudonymen = new ArrayList<byte[]>();
-
+        frame.setSize(300,600);
         p.add(text);
         p.setSize(new Dimension(300,600));
+        p.setBackground(new Color(255, 111, 0));
         frame.add(p);
 
-        frame.setSize(300,600);
-        frame.pack();
-        frame.show();
+
+        //frame.pack();
+        //frame.show();
         frame.setVisible(true);
     }
 

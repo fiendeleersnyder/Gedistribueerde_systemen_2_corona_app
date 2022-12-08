@@ -57,11 +57,8 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
 
         p.add(text);
         p.setSize(new Dimension(300,600));
+        p.setBackground(new Color(235, 52, 183));
         frame.add(p);
-
-        frame.setSize(300,600);
-        frame.pack();
-        frame.show();
         frame.setVisible(true);
 
     }
