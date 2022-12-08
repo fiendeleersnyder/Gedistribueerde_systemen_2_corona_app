@@ -81,13 +81,13 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         String data2 = location + "," + now + "," + encrypted_string;
         byte[] input = data2.getBytes();
         byte[] result = md.digest(input);
-        String pseudonym = new String(result);
+        return new String(result);
 
-        return pseudonym;
+
     }
 
     @Override
-    public ArrayList<ArrayList<Token>> get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SignatureException {
+    public ArrayList<ArrayList<Token>> get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
         /*boolean got_tokens = false;
         for (String number : phone_numbers) {
@@ -103,7 +103,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             Random random = new Random();
             int number;
             LocalDateTime now = LocalDateTime.now();
-            int day = now.getDayOfMonth() + i;
+            int day = i+1;
             byte[] digitalSignature;
 
             Signature signature = Signature.getInstance("SHA256withRSA");

@@ -1,12 +1,10 @@
 import javax.rmi.ssl.SslRMIClientSocketFactory;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 public class Main {
 
-    private void startMatchingService() throws RemoteException, NotBoundException {
+    private void startMatchingService() {
         try {
             Registry registry = LocateRegistry.getRegistry("localhost",4500);
             registry.bind("MatchingService", new MatchingService_implementation());
@@ -20,7 +18,7 @@ public class Main {
         System.out.println("matching service is ready");
     }
     //matching service
-    public static void main(String[] args) throws NotBoundException, RemoteException {
+    public static void main(String[] args) {
         System.setProperty("javax.net.ssl.trustStore","truststore");
         System.setProperty("javax.net.ssl.trustStorePassword","keystore");
         Main main = new Main();

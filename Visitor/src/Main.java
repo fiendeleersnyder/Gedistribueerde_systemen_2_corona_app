@@ -4,28 +4,24 @@ import javax.crypto.NoSuchPaddingException;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SignatureException;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Main {
     Registry myRegistryRegistrar;
     Registry myRegistryMixingProxy;
     Registrar registrar;
     MixingProxy mixingProxy;
+    java.security.cert.Certificate certMixingProxy;
     Doctor doctor;
     JFrame frame = new JFrame("Corona-app");
     ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
@@ -38,18 +34,28 @@ public class Main {
     String barcode;
     int random_number;
     String CF;
-    String hash;
+    byte[] hash;
     LocalTime localTime;
     Capsule capsule;
     usedToken usedToken;
 
 
-    public Main() throws RemoteException, NotBoundException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, SignatureException, InvalidKeyException {
+    public Main() throws IOException, NotBoundException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, SignatureException, InvalidKeyException, KeyStoreException, CertificateException {
         myRegistryRegistrar = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistryRegistrar.lookup("Registrar");
         myRegistryMixingProxy = LocateRegistry.getRegistry("localhost", 9000, new SslRMIClientSocketFactory());
         mixingProxy = (MixingProxy) myRegistryMixingProxy.lookup("MixingProxy");
         doctor = (Doctor) myRegistryRegistrar.lookup("Doctor");
+
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        String fileName = "keystore";
+        FileInputStream fis = new FileInputStream(fileName);
+        keyStore.load(fis,"keystore".toCharArray());
+        fis.close();
+
+        certMixingProxy = keyStore.getCertificate("mixingproxy");
+
+        gebruikteTokens = new ArrayList<>();
 
         JLabel text = new JLabel();
         text.setText("Scan QR-code: ");
@@ -57,24 +63,31 @@ public class Main {
         JTextArea barcodeField = new JTextArea(10, 20);
 
         JButton b = new JButton("submit");
-        b.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
-                barcode = barcodeField.getText();
-                capsule = new Capsule(LocalDateTime.now().toLocalTime(), tokensVandaag.get(aantalBezoeken), barcode.split(",")[2].getBytes(StandardCharsets.UTF_8));
-                random_number = Integer.parseInt(barcode.split(",")[0]);
-                CF = barcode.split(",")[1];
-                hash = barcode.split(",")[2];
-                localTime = LocalDateTime.now().toLocalTime();
-                usedToken = new usedToken(localTime,hash.getBytes(StandardCharsets.UTF_8), random_number);
-                gebruikteTokens.add(usedToken);
-                //tijdTokens.put(localTime, tokensVandaag.get(aantalBezoeken));
-                aantalBezoeken++;
-                try {
-                    byte[] terug = mixingProxy.sendCapsule(capsule, phone_number);
-                    System.out.println(terug.toString());
-                } catch (IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | RemoteException ex) {
-                    ex.printStackTrace();
+        JButton button = new JButton("Send log to doctor");
+        b.addActionListener(e -> {
+            barcode = barcodeField.getText();
+            barcodeField.setText("");
+            hash = barcode.split(",")[2].getBytes(StandardCharsets.UTF_8);
+            capsule = new Capsule(LocalDateTime.now().toLocalTime(), tokensVandaag.get(aantalBezoeken), hash);
+            random_number = Integer.parseInt(barcode.split(",")[0]);
+            CF = barcode.split(",")[1];
+            localTime = LocalDateTime.now().toLocalTime();
+            usedToken = new usedToken(localTime,hash, random_number);
+            gebruikteTokens.add(usedToken);
+            //tijdTokens.put(localTime, tokensVandaag.get(aantalBezoeken));
+            aantalBezoeken++;
+            try {
+                byte[] terug = mixingProxy.sendCapsule(capsule, phone_number);
+                Signature signature = Signature.getInstance("SHA256withRSA");
+                signature.initVerify(certMixingProxy.getPublicKey());
+                signature.update(hash);
+                boolean signed = signature.verify(terug);
+                if (signed) {
+                    //identicon
                 }
+
+            } catch (IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | RemoteException | SignatureException ex) {
+                ex.printStackTrace();
             }
         });
 
@@ -85,40 +98,34 @@ public class Main {
         p.setSize(new Dimension(300,600));
         frame.add(p);
 
-        JButton button = new JButton("Send log to doctor");
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try{
-                    String dag = LocalDateTime.now().toString();
-                    FileWriter fileWriter = new FileWriter("log.txt");
-                    BufferedWriter writer = new BufferedWriter(fileWriter);
-                    writer.write(dag + "\n");
-                    for(usedToken usedToken: gebruikteTokens) {
-                        writer.write(usedToken.getTimeInterval() + "\n" + usedToken.getHash() + "\n" + usedToken.getRandomNumber() + "\n");
-                    }
-                    fileWriter.close();
-                    writer.flush();
-                    writer.close();
+        button.addActionListener(e -> {
+            try{
+                String dag = LocalDateTime.now().toString();
+                FileWriter fileWriter = new FileWriter("log.txt");
+                BufferedWriter writer = new BufferedWriter(fileWriter);
+                writer.write(dag + "\n");
+                for(usedToken usedToken: gebruikteTokens) {
+                    writer.write(usedToken.getTimeInterval() + "\n" + usedToken.getHash() + "\n" + usedToken.getRandomNumber() + "\n");
                 }
-                catch  (IOException ex) {
-                    System.out.println("Error occurred. Try again.");
-                    ex.printStackTrace();
-                }
+                fileWriter.close();
+                writer.flush();
+                writer.close();
+            }
+            catch  (IOException ex) {
+                System.out.println("Error occurred. Try again.");
+                ex.printStackTrace();
+            }
 
-                try{
-                    File clientpathfile = new File("log.txt");//hier pathname mogelijks nog aanpassen
-                    byte [] mydata=new byte[(int) clientpathfile.length()];
-                    FileInputStream in=new FileInputStream(clientpathfile);
-                    System.out.println("uploading to doctorserver...");
-                    in.read(mydata, 0, mydata.length);
-                    doctor.uploadFileToServer(mydata);
-                    in.close();
-                } catch (FileNotFoundException ex) {
-                    ex.printStackTrace();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+            try{
+                File clientpathfile = new File("log.txt");//hier pathname mogelijks nog aanpassen
+                byte [] mydata=new byte[(int) clientpathfile.length()];
+                FileInputStream in=new FileInputStream(clientpathfile);
+                System.out.println("uploading to doctorserver...");
+                in.read(mydata, 0, mydata.length);
+                doctor.uploadFileToServer(mydata);
+                in.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
         });
 
@@ -142,7 +149,7 @@ public class Main {
         if (dag == 1 || tokens.isEmpty()) {
             tokens = registrar.get_tokens(phone_number);
         }
-        tokensVandaag = tokens.get(dag);
+        tokensVandaag = tokens.get(dag-1);
 
     }
 
@@ -167,7 +174,7 @@ public class Main {
 
     }
 
-    public static void main(String args[]) throws NotBoundException, RemoteException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, SignatureException {
+    public static void main(String args[]) throws NotBoundException, IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, SignatureException, CertificateException, KeyStoreException {
         System.setProperty("javax.net.ssl.trustStore","truststore");
         System.setProperty("javax.net.ssl.trustStorePassword","keystore");
         Main main = new Main();
