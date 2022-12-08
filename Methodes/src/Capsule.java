@@ -3,10 +3,10 @@ import java.time.LocalTime;
 
 public class Capsule implements Serializable {
     private LocalTime localTime;
-    private byte[] token;
+    private Token token;
     private byte[] hash;
 
-    public Capsule(LocalTime localTime, byte[] token, byte[] hash) {
+    public Capsule(LocalTime localTime, Token token, byte[] hash) {
         this.localTime = localTime;
         this.token = token;
         this.hash = hash;
@@ -20,11 +20,11 @@ public class Capsule implements Serializable {
         this.localTime = localTime;
     }
 
-    public byte[] getToken() {
+    public Token getToken() {
         return token;
     }
 
-    public void setToken(byte[] token) {
+    public void setToken(Token token) {
         this.token = token;
     }
 

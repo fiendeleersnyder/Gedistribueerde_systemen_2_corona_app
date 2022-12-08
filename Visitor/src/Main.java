@@ -28,9 +28,9 @@ public class Main {
     MixingProxy mixingProxy;
     Doctor doctor;
     JFrame frame = new JFrame("Corona-app");
-    ArrayList<ArrayList<byte[]>> tokens = new ArrayList<>();
-    ArrayList<byte[]> tokensVandaag;
-    HashMap<LocalTime, byte[]> tijdTokens = new HashMap<>();
+    ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
+    ArrayList<Token> tokensVandaag;
+    HashMap<LocalTime, Token> tijdTokens = new HashMap<>();
     int aantalBezoeken = 0;
     String name;
     String phone_number;
@@ -90,7 +90,7 @@ public class Main {
                     FileWriter fileWriter = new FileWriter("log.txt");
                     BufferedWriter writer = new BufferedWriter(fileWriter);
                     writer.write(dag + "\n");
-                    for(Map.Entry<LocalTime, byte[]> entry: tijdTokens.entrySet()) {
+                    for(Map.Entry<LocalTime, Token> entry: tijdTokens.entrySet()) {
                         //key is de tijd, value is de token
                         writer.write(entry.getKey() + "\n" + entry.getValue() + "\n");
                     }
@@ -154,9 +154,9 @@ public class Main {
 
     public void start() {
         if(tokens.size() != 0) {
-            for (ArrayList<byte[]> lijst: tokens) {
-                for (byte[] token: lijst) {
-                    System.out.println(token); //vreemde tokens, is dit het???
+            for (ArrayList<Token> lijst: tokens) {
+                for (Token token: lijst) {
+                    System.out.println(token.getDay() + "," + token.getRandomNumber());
                 }
             }
         }

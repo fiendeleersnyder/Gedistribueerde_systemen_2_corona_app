@@ -24,7 +24,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     final int AMOUNT_OF_TOKENS = 50;
     final int DAYS = 31;
     ArrayList<String> phone_numbers;
-    Map<String, ArrayList<ArrayList<byte[]>>> mapping = new HashMap();
+    Map<String, ArrayList<ArrayList<Token>>> mapping = new HashMap();
     JFrame frame= new JFrame("Content database");
     JLabel text = new JLabel("Content database: ");
     JPanel p = new JPanel();
@@ -87,8 +87,8 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     }
 
     @Override
-    public ArrayList<ArrayList<byte[]>> get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SignatureException {
-        ArrayList<ArrayList<byte[]>> tokens = new ArrayList<>();
+    public ArrayList<ArrayList<Token>> get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SignatureException {
+        ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
         /*boolean got_tokens = false;
         for (String number : phone_numbers) {
             if (phone_number.equalsIgnoreCase(number)) {
@@ -99,11 +99,11 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             return null;
         }*/
         for (int i = 0; i < DAYS; i++) {
-            ArrayList<byte[]> tokensVoorDag = new ArrayList<>(AMOUNT_OF_TOKENS);
+            ArrayList<Token> tokensVoorDag = new ArrayList<>(AMOUNT_OF_TOKENS);
             Random random = new Random();
             int number;
             LocalDateTime now = LocalDateTime.now();
-            int day = now.getDayOfMonth();
+            int day = now.getDayOfMonth() + i;
             byte[] digitalSignature;
 
             Signature signature = Signature.getInstance("SHA256withRSA");
@@ -113,7 +113,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
                 number = random.nextInt();
                 signature.update((number + "," + day).getBytes());
                 digitalSignature = signature.sign();
-                tokensVoorDag.add(digitalSignature);
+                tokensVoorDag.add(new Token(day, digitalSignature, number));
             }
             tokens.add(tokensVoorDag);
         }
@@ -121,5 +121,12 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         mapping.put(phone_number, tokens);
         updateGUI();
         return tokens;
+    }
+
+    public boolean checkValidity(Token token) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initVerify(publicKey);
+        signature.update((token.getRandomNumber() + "," + token.getDay()).getBytes());
+        return signature.verify(token.getDigitalSignature());
     }
 }
