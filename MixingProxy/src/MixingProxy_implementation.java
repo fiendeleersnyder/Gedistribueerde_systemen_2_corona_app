@@ -1,5 +1,14 @@
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -13,9 +22,14 @@ import java.util.ArrayList;
 public class MixingProxy_implementation extends UnicastRemoteObject implements MixingProxy{
     Registry myRegistry;
     Registrar registrar;
+    MatchingService matchingService;
     PrivateKey privateKey;
     ArrayList<Token> usedTokens;
     ArrayList<Capsule> capsules;
+    JFrame frame= new JFrame("Mixing database");
+    JLabel text = new JLabel("Registrar database: ");
+    JButton b = new JButton("Flush queue");
+    JPanel p = new JPanel();
 
     public MixingProxy_implementation() throws IOException, NotBoundException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
         usedTokens = new ArrayList<>();
@@ -23,6 +37,8 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
 
         myRegistry = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistry.lookup("Registrar");
+        matchingService = (MatchingService) myRegistry.lookup("MatchingService");
+
 
         KeyStore keyStore = KeyStore.getInstance("JKS");
         String fileName = "keystore";
@@ -31,6 +47,23 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
         fis.close();
 
         privateKey = (PrivateKey) keyStore.getKey("mixingproxy","keystore".toCharArray());
+
+        b.addActionListener(e -> {
+            try {
+                matchingService.sendCapsules(capsules);
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        p.add(text);
+        p.setSize(new Dimension(300,600));
+        frame.add(p);
+
+        frame.setSize(300,600);
+        frame.pack();
+        frame.show();
+        frame.setVisible(true);
 
     }
 

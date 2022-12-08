@@ -3,13 +3,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class usedToken implements Serializable {
-    private LocalTime timeInterval;
+    private LocalTime beginTijd;
+    private LocalTime eindTijd;
     private byte[] hash;
     private int randomNumber;
     private boolean infected;
 
-    public usedToken(LocalTime time, byte[] hash, int randomNumber) {
-        this.timeInterval = time;
+    public usedToken(LocalTime beginTijd, byte[] hash, int randomNumber) {
+        this.beginTijd = beginTijd;
         this.hash = hash;
         this.randomNumber = randomNumber;
         this.infected = false;

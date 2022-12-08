@@ -26,8 +26,9 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     final int DAYS = 31;
     ArrayList<String> phone_numbers;
     Map<String, ArrayList<ArrayList<Token>>> mapping = new HashMap();
-    JFrame frame= new JFrame("Content database");
-    JLabel text = new JLabel("Content database: ");
+    ArrayList<byte[]> pseudonymen;
+    JFrame frame= new JFrame("Registrar database");
+    JLabel text = new JLabel("Registrar database: ");
     JPanel p = new JPanel();
 
     public Registrar_implementation() throws IOException, NoSuchAlgorithmException {
@@ -44,6 +45,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         secret_key = keyGenerator.generateKey();
 
         phone_numbers = new ArrayList<>();
+        pseudonymen = new ArrayList<byte[]>();
 
         p.add(text);
         p.setSize(new Dimension(300,600));
@@ -82,8 +84,8 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         String data2 = location + "," + now + "," + encrypted_string;
         byte[] input = data2.getBytes();
         byte[] result = md.digest(input);
+        pseudonymen.add(result);
         return new String(result);
-
 
     }
 

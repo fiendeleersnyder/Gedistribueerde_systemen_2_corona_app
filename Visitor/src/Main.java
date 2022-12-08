@@ -73,6 +73,7 @@ public class Main {
         JTextArea barcodeField = new JTextArea(10, 20);
 
         JButton b = new JButton("submit");
+        JButton leave = new JButton("Leave catering facility");
         JButton button = new JButton("Send log to doctor");
         JLabel imageLabel = new JLabel();
         b.addActionListener(e -> {
@@ -83,8 +84,6 @@ public class Main {
             random_number = Integer.parseInt(barcode.split(",")[0]);
             CF = barcode.split(",")[1];
             localTime = LocalDateTime.now().toLocalTime();
-            usedToken = new usedToken(localTime,hash, random_number);
-            gebruikteTokens.add(usedToken);
             aantalBezoeken++;
             try {
                 byte[] signedHash = mixingProxy.sendCapsule(capsule, phone_number);
@@ -110,12 +109,19 @@ public class Main {
             }
         });
 
+        leave.addActionListener(e -> {
+            for(usedToken usedToken: gebruikteTokens) {
+                usedToken.setEindTijd(LocalTime.now());
+            }
+        });
+
         JPanel p = new JPanel();
         p.setSize(new Dimension(300,600));
         p.add(textName);
         p.add(textNumber);
         p.add(text);
         p.add(barcodeField);
+        p.add(leave);
         p.add(b);
         p.add(imageLabel);
         frame.add(p);
