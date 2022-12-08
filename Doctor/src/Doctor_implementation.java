@@ -1,3 +1,4 @@
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -9,11 +10,13 @@ import java.security.cert.CertificateException;
 
 public class Doctor_implementation extends UnicastRemoteObject implements Doctor{
     Registry myRegistry;
+    Registry myRegistryMixingProxy;
     MatchingService matchingService;
     PrivateKey privateKey;
 
-    public Doctor_implementation() throws IOException, NotBoundException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+    public Doctor_implementation() throws RemoteException,IOException, NotBoundException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
         myRegistry = LocateRegistry.getRegistry("localhost", 4500);
+        myRegistryMixingProxy = LocateRegistry.getRegistry("localhost", 9000, new SslRMIClientSocketFactory());
         matchingService = (MatchingService) myRegistry.lookup("MatchingService"); //mogelijks moet hier de matchingservice komen die verbonden is met de mixing proxy
 
         /*KeyStore keyStore = KeyStore.getInstance("JKS");
@@ -27,7 +30,7 @@ public class Doctor_implementation extends UnicastRemoteObject implements Doctor
 */
     }
 
-    public void uploadFileToServer(byte[] mydata) {
+    public void uploadFileToServer(byte[] mydata) throws RemoteException{
         try {
             File serverpathfile = new File("logDokter.txt");
             FileOutputStream out=new FileOutputStream(serverpathfile);

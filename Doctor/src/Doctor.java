@@ -1,4 +1,6 @@
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
-public interface Doctor {
-    void uploadFileToServer(byte[] mydata); //dient om file van patiënt te krijgen
+public interface Doctor extends Remote {
+    void uploadFileToServer(byte[] mydata) throws RemoteException; //dient om file van patiënt te krijgen
 }

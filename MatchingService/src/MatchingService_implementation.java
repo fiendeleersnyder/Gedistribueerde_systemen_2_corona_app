@@ -14,6 +14,7 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     public MatchingService_implementation() throws RemoteException, NotBoundException {
         myRegistryRegistrar = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistryRegistrar.lookup("Registrar");
+
         myRegistryMixingProxy = LocateRegistry.getRegistry("localhost", 9000, new SslRMIClientSocketFactory());
         mixingProxy = (MixingProxy) myRegistryMixingProxy.lookup("MixingProxy");
     }

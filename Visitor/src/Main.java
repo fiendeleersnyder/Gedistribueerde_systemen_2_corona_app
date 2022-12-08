@@ -30,7 +30,8 @@ public class Main {
     JFrame frame = new JFrame("Corona-app");
     ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
     ArrayList<Token> tokensVandaag;
-    HashMap<LocalTime, Token> tijdTokens = new HashMap<>();
+    ArrayList<usedToken> gebruikteTokens;
+    //HashMap<LocalTime, Token> tijdTokens = new HashMap<>();
     int aantalBezoeken = 0;
     String name;
     String phone_number;
@@ -40,6 +41,7 @@ public class Main {
     String hash;
     LocalTime localTime;
     Capsule capsule;
+    usedToken usedToken;
 
 
     public Main() throws RemoteException, NotBoundException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, SignatureException, InvalidKeyException {
@@ -63,7 +65,9 @@ public class Main {
                 CF = barcode.split(",")[1];
                 hash = barcode.split(",")[2];
                 localTime = LocalDateTime.now().toLocalTime();
-                tijdTokens.put(localTime, tokensVandaag.get(aantalBezoeken));
+                usedToken = new usedToken(localTime,hash.getBytes(StandardCharsets.UTF_8), random_number);
+                gebruikteTokens.add(usedToken);
+                //tijdTokens.put(localTime, tokensVandaag.get(aantalBezoeken));
                 aantalBezoeken++;
                 try {
                     byte[] terug = mixingProxy.sendCapsule(capsule, phone_number);
@@ -90,12 +94,9 @@ public class Main {
                     FileWriter fileWriter = new FileWriter("log.txt");
                     BufferedWriter writer = new BufferedWriter(fileWriter);
                     writer.write(dag + "\n");
-                    for(Map.Entry<LocalTime, Token> entry: tijdTokens.entrySet()) {
-                        //key is de tijd, value is de token
-                        writer.write(entry.getKey() + "\n" + entry.getValue() + "\n");
+                    for(usedToken usedToken: gebruikteTokens) {
+                        writer.write(usedToken.getTimeInterval() + "\n" + usedToken.getHash() + "\n" + usedToken.getRandomNumber() + "\n");
                     }
-                    writer.write(hash + "\n");
-                    writer.write(random_number);
                     fileWriter.close();
                     writer.flush();
                     writer.close();
