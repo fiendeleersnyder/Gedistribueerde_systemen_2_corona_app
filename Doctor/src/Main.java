@@ -2,36 +2,48 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-// dokter heeft minimale GUI
-// moet van patient log.txt krijgen en moet deze signen en vervolgens doorsturen naar MatchingService
-// dokter zal dus als een server werken voor patient: zo kan file van patient naar dokter gestuurd worden
-// dokter zal als een client werken voor matching service: zo kan file van dokter naar matching service gestuurd worden
-
 public class Main {
-    JFrame frame = new JFrame("Corona-app");
+    /*JFrame frame = new JFrame("Corona-app");
+    Registry myRegistry;
+    MatchingService matchingService;
+    public Main() throws RemoteException, NotBoundException {
+        myRegistry = LocateRegistry.getRegistry("localhost", 4500);
+        matchingService = (MatchingService) myRegistry.lookup("MatchingService");
 
-    public Main() {
         JButton button = new JButton("Send log to matching service");
         button.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
-                //hierin matching service oproepen matchingService.sendFile(logDokter.txt)
+                try{
+                    File clientpathfile = new File("logDokter.txt");
+                    byte [] mydata=new byte[(int) clientpathfile.length()];
+                    FileInputStream in=new FileInputStream(clientpathfile);
+                    System.out.println("uploading to matching service...");
+                    in.read(mydata, 0, mydata.length);
+                    matchingService.uploadFileToMatchingServer(mydata);
+                    in.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         });
+
         JPanel p = new JPanel();
         p.add(button);
         p.setSize(new Dimension(300,600));
         frame.add(p);
-        frame.setSize(300,600);
+        frame.setSize(600,600);
         frame.pack();
         frame.show();
         frame.setVisible(true);
-    }
+
+
+    }*/
 
     public void start(){
         try {

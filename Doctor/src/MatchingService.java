@@ -1,5 +1,7 @@
 import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.security.PublicKey;
 
 public interface MatchingService extends Remote {
-    //hier een sendFile die door dokter wordt opgeroepen
+    void uploadFileToMatchingServer(byte[] mydata,  byte[] signature, PublicKey publicKey) throws RemoteException;
 }

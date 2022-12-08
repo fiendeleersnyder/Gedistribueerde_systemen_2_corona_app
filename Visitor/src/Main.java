@@ -28,7 +28,6 @@ public class Main {
     ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
     ArrayList<Token> tokensVandaag;
     ArrayList<usedToken> gebruikteTokens;
-    //HashMap<LocalTime, Token> tijdTokens = new HashMap<>();
     int aantalBezoeken = 0;
     String name;
     String phone_number;
@@ -86,7 +85,6 @@ public class Main {
             localTime = LocalDateTime.now().toLocalTime();
             usedToken = new usedToken(localTime,hash, random_number);
             gebruikteTokens.add(usedToken);
-            //tijdTokens.put(localTime, tokensVandaag.get(aantalBezoeken));
             aantalBezoeken++;
             try {
                 byte[] signedHash = mixingProxy.sendCapsule(capsule, phone_number);
@@ -124,19 +122,14 @@ public class Main {
 
         button.addActionListener(e -> {
             try{
-                String dag = LocalDateTime.now().toString();
                 FileWriter fileWriter = new FileWriter("log.txt");
-                BufferedWriter writer = new BufferedWriter(fileWriter);
-                writer.write(dag + "\n");
                 for(usedToken usedToken: gebruikteTokens) {
-                    writer.write(usedToken.getTimeInterval() + "\n" + usedToken.getHash() + "\n" + usedToken.getRandomNumber() + "\n");
+                    fileWriter.write(usedToken.getTimeInterval() + " " + usedToken.getHash() + " " + usedToken.getRandomNumber() + "\n");
                 }
                 fileWriter.close();
-                writer.flush();
-                writer.close();
             }
             catch  (IOException ex) {
-                System.out.println("Error occurred. Try again.");
+                System.out.println("Error occurred while trying to write the log. Try again.");
                 ex.printStackTrace();
             }
 
@@ -155,11 +148,11 @@ public class Main {
 
         JPanel panel = new JPanel();
         panel.add(button);
-        panel.setSize(new Dimension(300,600));
+        panel.setSize(new Dimension(150,600));
         frame.add(panel);
 
 
-        frame.setSize(300,600);
+        frame.setSize(1000,1000);
         frame.pack();
         frame.setVisible(true);
 
