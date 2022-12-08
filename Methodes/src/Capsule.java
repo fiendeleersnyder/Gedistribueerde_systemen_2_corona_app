@@ -4,9 +4,9 @@ import java.time.LocalTime;
 public class Capsule implements Serializable {
     private LocalTime localTime;
     private Token token;
-    private byte[] hash;
+    private String hash;
 
-    public Capsule(LocalTime localTime, Token token, byte[] hash) {
+    public Capsule(LocalTime localTime, Token token, String hash) {
         this.localTime = localTime;
         this.token = token;
         this.hash = hash;
@@ -28,11 +28,11 @@ public class Capsule implements Serializable {
         this.token = token;
     }
 
-    public byte[] getHash() {
+    public String getHash() {
         return hash;
     }
 
-    public void setHash(byte[] hash) {
+    public void setHash(String hash) {
         this.hash = hash;
     }
 }

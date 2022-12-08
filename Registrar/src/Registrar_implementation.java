@@ -135,7 +135,6 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         return signature.verify(token.getDigitalSignature());
     }
 
-    @Override
     public ArrayList<byte[]> getPseudonyms() throws RemoteException {
         //hier lijst van pseudonumen returnen naar matching service
         return pseudonymen;

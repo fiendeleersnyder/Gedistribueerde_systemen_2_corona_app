@@ -1,11 +1,5 @@
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,11 +12,14 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MixingProxy_implementation extends UnicastRemoteObject implements MixingProxy{
     Registry myRegistry;
     Registrar registrar;
-    MatchingService matchingService;
     PrivateKey privateKey;
     ArrayList<Token> usedTokens;
     ArrayList<Capsule> capsules;
@@ -36,7 +33,9 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
 
         myRegistry = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistry.lookup("Registrar");
-        matchingService = (MatchingService) myRegistry.lookup("MatchingService");
+        frame= new JFrame("Mixing database");
+        text = new JLabel("Registrar database: ");
+        p = new JPanel();
 
 
         KeyStore keyStore = KeyStore.getInstance("JKS");
@@ -46,15 +45,7 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
         fis.close();
 
         privateKey = (PrivateKey) keyStore.getKey("mixingproxy","keystore".toCharArray());
-
-        b.addActionListener(e -> {
-            try {
-                matchingService.sendCapsules(capsules);
-            } catch (RemoteException ex) {
-                ex.printStackTrace();
-            }
-        });
-
+        frame.setSize(300,600);
         p.add(text);
         p.setSize(new Dimension(300,600));
         p.setBackground(new Color(235, 52, 183));
@@ -63,7 +54,7 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
 
     }
 
-    @Override
+
     public byte[] sendCapsule(Capsule capsule, String phone_number) throws NoSuchAlgorithmException, InvalidKeyException, RemoteException, SignatureException {
         boolean valid = registrar.checkValidity(capsule.getToken());
         boolean correctDay = capsule.getToken().getDay() == LocalDateTime.now().getDayOfMonth();
@@ -83,7 +74,7 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
             capsules.add(capsule);
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(privateKey);
-            signature.update(capsule.getHash());
+            signature.update(capsule.getHash().getBytes(StandardCharsets.UTF_8));
             return signature.sign();
         }
 

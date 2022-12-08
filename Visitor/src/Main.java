@@ -34,7 +34,7 @@ public class Main {
     String barcode;
     int random_number;
     String CF;
-    byte[] hash;
+    String hash;
     LocalTime localTime;
     Capsule capsule;
     usedToken usedToken;
@@ -82,7 +82,7 @@ public class Main {
         b.addActionListener(e -> {
             barcode = barcodeField.getText();
             barcodeField.setText("");
-            hash = barcode.split(",")[2].getBytes(StandardCharsets.UTF_8);
+            hash = barcode.split(",")[2];
             capsule = new Capsule(LocalDateTime.now().toLocalTime(), tokensVandaag.get(aantalBezoeken), hash);
             random_number = Integer.parseInt(barcode.split(",")[0]);
             CF = barcode.split(",")[1];
@@ -92,11 +92,11 @@ public class Main {
                 byte[] signedHash = mixingProxy.sendCapsule(capsule, phone_number);
                 Signature signature = Signature.getInstance("SHA256withRSA");
                 signature.initVerify(certMixingProxy.getPublicKey());
-                signature.update(hash);
+                signature.update(hash.getBytes(StandardCharsets.UTF_8));
                 boolean signed = signature.verify(signedHash);
                 if (signed) {
                     System.out.println("Sign oke");
-                    usedToken = new usedToken(localTime,hash, random_number);
+                    usedToken = new usedToken(localTime, hash, random_number);
                     gebruikteTokens.add(usedToken);
                     //identicon
                     BufferedImage image = Identicon.generateIdenticons(signedHash, 150,150);
@@ -113,6 +113,7 @@ public class Main {
         });
 
         leave.addActionListener(e -> {
+            System.out.println("Uit cafe");
             for(usedToken usedToken: gebruikteTokens) {
                 usedToken.setEindTijd(LocalTime.now());
             }
