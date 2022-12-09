@@ -18,7 +18,6 @@ import java.rmi.registry.Registry;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -41,7 +40,7 @@ public class Main {
     int random_number;
     String CF;
     String hash;
-    LocalTime localTime;
+    LocalDateTime localDateTime;
     Capsule capsule;
     usedToken usedToken;
     boolean aanwezig = false;
@@ -77,12 +76,12 @@ public class Main {
             public void run() {
                 System.out.println("timer werkt!");
                 if (aanwezig) {
-                    if (LocalTime.now().compareTo(gebruikteTokens.get(aantalBezoeken-1).getBeginTijd().plusSeconds(10)) > 0) {
+                    if (LocalDateTime.now().compareTo(gebruikteTokens.get(aantalBezoeken-1).getBeginTijd().plusSeconds(10)) > 0) {
                         try {
                             System.out.println("nieuwe token is verstuurd");
-                            capsule = new Capsule(LocalDateTime.now().toLocalTime(), tokensVandaag.get(aantalBezoeken), hash);
-                            mixingProxy.sendCapsule(capsule, phone_number);
-                            gebruikteTokens.add(new usedToken(LocalTime.now(), hash, random_number));
+                            capsule = new Capsule(tokensVandaag.get(aantalBezoeken), hash);
+                            mixingProxy.sendCapsule(capsule);
+                            gebruikteTokens.add(new usedToken(LocalDateTime.now(), hash, random_number));
                             aantalBezoeken++;
                         } catch (RemoteException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | InvalidKeyException | NoSuchAlgorithmException e) {
                             e.printStackTrace();
@@ -110,13 +109,13 @@ public class Main {
         b.addActionListener(e -> {
             barcode = barcodeField.getText();
             barcodeField.setText("");
-            hash = barcode.split(",")[2];
-            localTime = LocalTime.now();
-            capsule = new Capsule(localTime, tokensVandaag.get(aantalBezoeken), hash);
-            random_number = Integer.parseInt(barcode.split(",")[0]);
-            CF = barcode.split(",")[1];
+            hash = barcode.split("%")[2];
+            localDateTime = LocalDateTime.now();
+            capsule = new Capsule(localDateTime, tokensVandaag.get(aantalBezoeken), hash);
+            random_number = Integer.parseInt(barcode.split("%")[0]);
+            CF = barcode.split("%")[1];
             try {
-                byte[] signedHash = mixingProxy.sendCapsule(capsule, phone_number);
+                byte[] signedHash = mixingProxy.sendCapsule(capsule);
                 Signature signature = Signature.getInstance("SHA256withRSA");
                 signature.initVerify(certMixingProxy.getPublicKey());
                 signature.update(hash.getBytes(StandardCharsets.UTF_8));
@@ -124,7 +123,7 @@ public class Main {
                 if (signed) {
                     aantalBezoeken++;
                     System.out.println("Sign oke");
-                    usedToken = new usedToken(localTime, hash, random_number);
+                    usedToken = new usedToken(localDateTime, hash, random_number);
                     gebruikteTokens.add(usedToken);
                     aanwezig = true;
                     //identicon
@@ -145,7 +144,7 @@ public class Main {
             System.out.println("Uit cafe");
             aanwezig = false;
             for(usedToken usedToken: gebruikteTokens) {
-                usedToken.setEindTijd(LocalTime.now());
+                usedToken.setEindTijd(LocalDateTime.now());
             }
         });
 
@@ -165,7 +164,7 @@ public class Main {
             try{
                 FileWriter fileWriter = new FileWriter("log.txt");
                 for(usedToken usedToken: gebruikteTokens) {
-                    fileWriter.write(usedToken + " " + usedToken.getBeginTijd() + " " + usedToken.getEindTijd() + " " + usedToken.getHash() + " " + usedToken.getRandomNumber() + "\n");
+                    fileWriter.write(usedToken + "%" + usedToken.getBeginTijd() + "%" + usedToken.getEindTijd() + "%" + usedToken.getHash() + "%" + usedToken.getRandomNumber() + "\n");
                 }
                 fileWriter.close();
             }
@@ -192,10 +191,6 @@ public class Main {
         panel.setSize(new Dimension(150,600));
         panel.setBackground(Color.CYAN);
         frame.add(panel);
-
-
-        //frame.setSize(1000,1000);
-        //frame.pack();
         frame.setVisible(true);
 
         int dag = LocalDateTime.now().getDayOfMonth();

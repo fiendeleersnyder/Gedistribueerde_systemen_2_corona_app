@@ -8,7 +8,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.*;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.Timer;
 import java.util.*;
 
@@ -19,10 +19,10 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     MixingProxy mixingProxy;
     PublicKey publicKeyDoctor;
     byte[] signatureDoctor;
-    ArrayList <byte []> pseudonymList;
     ArrayList <usedToken> infectedTokens;
     ArrayList<Capsule> capsules;
     ArrayList<Capsule> uninformedInfected;
+    ArrayList<ArrayList<byte[]>> pseudonymen;
     JFrame frame;//= new JFrame("Matching Service");
     JButton b;// = new JButton("Flush mixing queue");
 
@@ -35,9 +35,12 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         mixingProxy = (MixingProxy) myRegistryMixingProxy.lookup("MixingProxy");
 
         infectedTokens = new ArrayList<>();
-        pseudonymList = new ArrayList<>();
         capsules = new ArrayList<>();
         uninformedInfected = new ArrayList<>();
+        pseudonymen = new ArrayList<>();
+        for (int i = 0; i < 31; i++) {
+            pseudonymen.add(new ArrayList<>());
+        }
 
         frame= new JFrame("Matching Service");
         JPanel panel = new JPanel();
@@ -60,7 +63,7 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
                     e.printStackTrace();
                 }
             }
-        }, 100, 1000*60*30);
+        }, 1000*60*30, 1000*60*30);
 
 
         frame.setSize(300,300);
@@ -76,12 +79,9 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         try {
             File serverpathfile = new File("logMatchingService.txt");
             FileOutputStream out=new FileOutputStream(serverpathfile);
-            byte [] data=mydata;
-            out.write(data);
+            out.write(mydata);
             out.flush();
             out.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -105,16 +105,40 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
             Scanner sc = new Scanner(file);
             while (sc.hasNextLine()){
                 String lijn = sc.nextLine();
-                String[] split= lijn.split(" ");
-                LocalTime begin = LocalTime.parse(split[1]);
-                LocalTime eind = LocalTime.parse(split[2]);
+                String[] split= lijn.split("%");
+                LocalDateTime begin = LocalDateTime.parse(split[1]);
+                LocalDateTime eind = LocalDateTime.parse(split[2]);
                 String hash = split[3];
                 int randomnummer = Integer.parseInt(split[4]);
                 System.out.println(begin + " " + eind + " " +hash + " "+ randomnummer);
                 infectedTokens.add(new usedToken(begin, eind, hash, randomnummer));
             }
 
-            pseudonymList = registrar.getPseudonyms(); //moet nog worden aangepast zodat er enkel pseudonyms van 1 dag worden opgehaald
+            int day;
+            boolean valid = false;
+            ArrayList<usedToken> unvalidTokens = new ArrayList<>();
+            for (usedToken token: infectedTokens) {
+                day = token.getBeginTijd().getDayOfMonth();
+                if (pseudonymen.get(day-1).isEmpty()) {
+                    pseudonymen.get(day-1).addAll(registrar.getPseudonyms(day));
+                }
+                for (byte[] pseudonym: pseudonymen.get(day-1)) {
+                    System.out.println(Arrays.toString(pseudonym));
+                    byte[] gemaaktehash = makeHash(pseudonym, token.getRandomNumber());
+                    System.out.println(Arrays.toString(gemaaktehash));
+                    if (Objects.equals(token.getHash(), Arrays.toString(gemaaktehash))) {
+                        valid = true;
+                        break;
+                    }
+                }
+                if (!valid) {
+                    unvalidTokens.add(token);
+                }
+            }
+
+            for (usedToken token: unvalidTokens) {
+                infectedTokens.remove(token);
+            }
 
 
             if(capsules.size()!=0) {
@@ -124,7 +148,7 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
                     while (iterator.hasNext()) {
                         Capsule capsule = iterator.next();
                         if (Objects.equals(token.getHash(), capsule.getHash())) {
-                            if (checkTimeInterval(token.getBeginTijd(), token.getEindTijd(), capsule.getLocalTime())) {
+                            if (checkTimeInterval(token.getBeginTijd(), token.getEindTijd(), capsule.getLocalDateTime())) {
                                 uninformedInfected.add(capsule);
                                 iterator.remove();
                                 System.out.println("found infected user");
@@ -140,21 +164,17 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     }
 
     public void getCapsules() throws RemoteException {
-        ArrayList<Capsule> lijstCapsules = mixingProxy.getCapsules();
-        System.out.println("functie");
-        for(Capsule c : lijstCapsules){
-            capsules.add(c);
-        }
+        capsules = mixingProxy.getCapsules();
     }
 
     public byte[] makeHash(byte[] pseudonym, int random) throws NoSuchAlgorithmException {
-
-        String data = pseudonym + "," +  random;
+        String data = random + "," + Arrays.toString(pseudonym);
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
-        return md.digest(data.getBytes(StandardCharsets.UTF_8));
+        md.update(data.getBytes(StandardCharsets.UTF_8));
+        return md.digest();
     }
 
-    public boolean checkTimeInterval(LocalTime begin, LocalTime eind, LocalTime user) {
+    public boolean checkTimeInterval(LocalDateTime begin, LocalDateTime eind, LocalDateTime user) {
         boolean inInterval = false;
         if(begin.compareTo(user) <= 0 & eind.compareTo(user) >= 0){
             inInterval = true;

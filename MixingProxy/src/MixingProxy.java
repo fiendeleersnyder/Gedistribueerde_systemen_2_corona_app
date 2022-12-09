@@ -9,6 +9,6 @@ import java.security.SignatureException;
 import java.util.ArrayList;
 
 public interface MixingProxy extends Remote {
-    byte[] sendCapsule(Capsule capsule, String phoneNumber) throws RemoteException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, SignatureException;
+    byte[] sendCapsule(Capsule capsule) throws RemoteException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, SignatureException;
     ArrayList<Capsule> getCapsules() throws RemoteException;
 }

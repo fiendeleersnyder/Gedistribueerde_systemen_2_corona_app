@@ -30,11 +30,10 @@ public class Main {
     }
 
     public byte[] get_pseudonym(String name, String location) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        byte[] pseudonym = registrar.create_pseudonym(name, location);
-        return pseudonym;
+        return registrar.create_pseudonym(name, location);
     }
 
-    public BitMatrix generate_qrcode(String name, byte[] pseudonym) throws NoSuchAlgorithmException, WriterException, IOException {
+    public BitMatrix generate_qrcode(String name, byte[] pseudonym) throws NoSuchAlgorithmException, WriterException {
         Random random = new Random();
         number = random.nextInt();
         String data = number + "," + Arrays.toString(pseudonym);
@@ -43,8 +42,8 @@ public class Main {
         System.out.println(bytedate);
         md.update(data.getBytes(StandardCharsets.UTF_8));
         byte[] hash = md.digest();
-        String result_string = number + "," + name + "," + new String(hash);
-        System.out.println(number + "," + name + "," + hash);
+        String result_string = number + "," + name + "," + Arrays.toString(hash);
+        System.out.println(number + "%" + name + "%" + Arrays.toString(hash));
         byte[] result = result_string.getBytes(StandardCharsets.UTF_8);
         return new MultiFormatWriter().encode(new String(result, StandardCharsets.UTF_8), BarcodeFormat.QR_CODE, 25, 25);
     }
@@ -71,6 +70,7 @@ public class Main {
         phone_number = in.nextLine();*/
 
         byte[] pseudonym = main.get_pseudonym(name, location);
+        System.out.println(Arrays.toString(pseudonym));
         System.out.println(pseudonym);
 
         BitMatrix qrcode = main.generate_qrcode(name, pseudonym);

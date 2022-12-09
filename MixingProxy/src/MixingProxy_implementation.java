@@ -13,6 +13,8 @@ import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MixingProxy_implementation extends UnicastRemoteObject implements MixingProxy{
     Registry myRegistry;
@@ -36,6 +38,26 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
         text = new JLabel("Mixing database: ");
         p = new JPanel();
 
+        for (JLabel label: labels) {
+            label.setText("");
+        }
+
+        java.util.Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                ArrayList<Capsule> deleteCapsules = new ArrayList<>();
+                for (Capsule capsule: capsules) {
+                    if (capsule.getLocalDateTime().plusMinutes(60*24).compareTo(LocalDateTime.now()) < 0) {
+                        deleteCapsules.add(capsule);
+                    }
+                }
+                for (Capsule capsule: deleteCapsules) {
+                    capsules.remove(capsule);
+                }
+            }
+        }, 1000*60*60*24, 1000*60*60*24);
+
 
         KeyStore keyStore = KeyStore.getInstance("JKS");
         String fileName = "keystore";
@@ -55,7 +77,7 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     public void updateGUI() {
         if (!capsules.isEmpty()) {
             JLabel capsule = new JLabel();
-            capsule.setText("LocalTime: " + capsules.get(capsules.size() - 1).getLocalTime() + " Token: " + capsules.get(capsules.size() - 1).getToken() + " Hash: " + capsules.get(capsules.size() - 1).getHash());
+            capsule.setText("LocalTime: " + capsules.get(capsules.size() - 1).getLocalDateTime() + " Token: " + capsules.get(capsules.size() - 1).getToken() + " Hash: " + capsules.get(capsules.size() - 1).getHash());
             p.add(capsule);
             labels.add(capsule);
             frame.setVisible(true);
@@ -64,7 +86,10 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     }
 
 
-    public byte[] sendCapsule(Capsule capsule, String phone_number) throws NoSuchAlgorithmException, InvalidKeyException, RemoteException, SignatureException {
+    public byte[] sendCapsule(Capsule capsule) throws NoSuchAlgorithmException, InvalidKeyException, RemoteException, SignatureException {
+        if (capsule.getLocalDateTime() == null) {
+            capsule.setLocalDateTime(LocalDateTime.now());
+        }
         boolean valid = registrar.checkValidity(capsule.getToken());
         boolean correctDay = capsule.getToken().getDay() == LocalDateTime.now().getDayOfMonth();
         boolean alreadyUsed = false;
@@ -93,14 +118,6 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     @Override
     public ArrayList<Capsule> getCapsules() throws RemoteException {
         Collections.shuffle(capsules);
-        ArrayList<Capsule> temp = new ArrayList<>();
-        for (Capsule capsule: capsules) {
-            temp.add(capsule);
-        }
-        capsules.clear();
-        for (JLabel label: labels) {
-            label.setText("");
-        }
-        return temp;
+        return capsules;
     }
 }

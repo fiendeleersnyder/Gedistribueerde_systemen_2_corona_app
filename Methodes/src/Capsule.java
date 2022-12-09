@@ -1,22 +1,28 @@
 import java.io.Serializable;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 public class Capsule implements Serializable {
-    private LocalTime localTime;
+    private LocalDateTime localTime;
     private Token token;
     private String hash;
 
-    public Capsule(LocalTime localTime, Token token, String hash) {
+    public Capsule(LocalDateTime localTime, Token token, String hash) {
         this.localTime = localTime;
         this.token = token;
         this.hash = hash;
     }
 
-    public LocalTime getLocalTime() {
+    public Capsule(Token token, String hash) {
+        this.localTime = null;
+        this.token = token;
+        this.hash = hash;
+    }
+
+    public LocalDateTime getLocalDateTime() {
         return localTime;
     }
 
-    public void setLocalTime(LocalTime localTime) {
+    public void setLocalDateTime(LocalDateTime localTime) {
         this.localTime = localTime;
     }
 

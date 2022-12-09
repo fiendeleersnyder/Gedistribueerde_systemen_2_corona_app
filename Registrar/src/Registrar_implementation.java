@@ -1,7 +1,6 @@
 import at.favre.lib.crypto.HKDF;
 
 import javax.crypto.*;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.swing.*;
 import java.awt.*;
@@ -11,7 +10,10 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.*;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 
 public class Registrar_implementation extends UnicastRemoteObject implements Registrar{
@@ -23,7 +25,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     final int DAYS = 31;
     ArrayList<String> phone_numbers;
     Map<String, ArrayList<ArrayList<Token>>> mapping = new HashMap();
-    ArrayList<byte[]> pseudonymen;
+    ArrayList<ArrayList<byte[]>> pseudonymen;
     JFrame frame;
     JLabel text;
     JPanel p;
@@ -45,7 +47,10 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         secret_key = keyGenerator.generateKey();
 
         phone_numbers = new ArrayList<>();
-        pseudonymen = new ArrayList<byte[]>();
+        pseudonymen = new ArrayList<>();
+        for (int i = 0; i < 31; i++) {
+            pseudonymen.add(new ArrayList<>());
+        }
         frame.setSize(300,600);
         p.add(text);
         p.setSize(new Dimension(300,600));
@@ -58,7 +63,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         JLabel number = new JLabel();
         number.setText(phone_numbers.get(phone_numbers.size()-1));
         p.add(number);
-        frame.show();
+        frame.setVisible(true);
 
     }
 
@@ -68,19 +73,16 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         String data = name+","+day;
         //secret key voor catering facility
         HKDF hkdf = HKDF.fromHmacSha256();
-        byte[] expandedKey = hkdf.expand(secret_key.getEncoded(), "aes-key".getBytes(StandardCharsets.UTF_8), 16);
+        byte[] expandedKey = hkdf.expand(secret_key.getEncoded(), data.getBytes(StandardCharsets.UTF_8), 16);
         SecretKey key = new SecretKeySpec(expandedKey, "AES"); //AES-128 key
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(expandedKey));
-        byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
 
         //pseudonym
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
-        String encrypted_string = new String(encrypted);
+        String encrypted_string = key.toString();
         String data2 = location + "," + day + "," + encrypted_string;
         byte[] input = data2.getBytes();
         byte[] result = md.digest(input);
-        pseudonymen.add(result);
+        pseudonymen.get(day-1).add(result);
         return result;
 
     }
@@ -105,9 +107,9 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
 
             byte[] digitalSignature;
             signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(privateKey);
 
             for (int j = 0; j < AMOUNT_OF_TOKENS; j++) {
+                signature.initSign(privateKey);
                 number = random.nextInt();
                 signature.update((number + "," + day).getBytes());
                 digitalSignature = signature.sign();
@@ -127,8 +129,8 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         return signature.verify(token.getDigitalSignature());
     }
 
-    public ArrayList<byte[]> getPseudonyms() throws RemoteException {
+    public ArrayList<byte[]> getPseudonyms(int day) throws RemoteException {
         //hier lijst van pseudonumen returnen naar matching service
-        return pseudonymen;
+        return pseudonymen.get(day-1);
     }
 }

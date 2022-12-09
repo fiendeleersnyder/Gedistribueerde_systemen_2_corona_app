@@ -1,22 +1,21 @@
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 public class usedToken implements Serializable {
-    private LocalTime beginTijd;
-    private LocalTime eindTijd;
+    private LocalDateTime beginTijd;
+    private LocalDateTime eindTijd;
     private String hash;
     private int randomNumber;
     private boolean informed;
 
-    public usedToken(LocalTime beginTijd, String hash, int randomNumber) {
+    public usedToken(LocalDateTime beginTijd, String hash, int randomNumber) {
         this.beginTijd = beginTijd;
         this.hash = hash;
         this.randomNumber = randomNumber;
         this.informed = false;
     }
 
-    public usedToken(LocalTime beginTijd, LocalTime eindTijd, String hash, int randomNumber) {
+    public usedToken(LocalDateTime beginTijd, LocalDateTime eindTijd, String hash, int randomNumber) {
         this.beginTijd = beginTijd;
         this.eindTijd = eindTijd;
         this.hash = hash;
@@ -29,13 +28,13 @@ public class usedToken implements Serializable {
 
     public void setInfected(boolean informed) { this.informed = informed; }
 
-    public LocalTime getBeginTijd() { return beginTijd; }
+    public LocalDateTime getBeginTijd() { return beginTijd; }
 
-    public void setBeginTijd(LocalTime beginTijd) { this.beginTijd = beginTijd; }
+    public void setBeginTijd(LocalDateTime beginTijd) { this.beginTijd = beginTijd; }
 
-    public LocalTime getEindTijd() { return eindTijd; }
+    public LocalDateTime getEindTijd() { return eindTijd; }
 
-    public void setEindTijd(LocalTime eindTijd) { this.eindTijd = eindTijd; }
+    public void setEindTijd(LocalDateTime eindTijd) { this.eindTijd = eindTijd; }
 
     public String getHash() {
         return hash;
