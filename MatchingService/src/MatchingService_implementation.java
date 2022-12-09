@@ -8,13 +8,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.*;
-import java.sql.Array;
 import java.time.LocalTime;
-import java.util.*;
 import java.util.Timer;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 
 public class MatchingService_implementation extends UnicastRemoteObject implements MatchingService{
     Registry myRegistryRegistrar;
@@ -58,7 +54,6 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                System.out.println("timer werkt!");
                 try {
                     getCapsules();
                 } catch (RemoteException e) {

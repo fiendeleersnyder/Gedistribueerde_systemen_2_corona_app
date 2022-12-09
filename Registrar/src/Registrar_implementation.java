@@ -11,25 +11,22 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 
 public class Registrar_implementation extends UnicastRemoteObject implements Registrar{
     Key secret_key;
     PrivateKey privateKey;
     PublicKey publicKey;
-    Signature signature = Signature.getInstance("SHA256withRSA");
+    Signature signature;
     final int AMOUNT_OF_TOKENS = 50;
     final int DAYS = 31;
     ArrayList<String> phone_numbers;
     Map<String, ArrayList<ArrayList<Token>>> mapping = new HashMap();
     ArrayList<byte[]> pseudonymen;
-    JFrame frame;//= new JFrame("Registrar database");
-    JLabel text; // = new JLabel("Registrar database: ");
-    JPanel p;// = new JPanel();
+    JFrame frame;
+    JLabel text;
+    JPanel p;
 
     public Registrar_implementation() throws IOException, NoSuchAlgorithmException {
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
@@ -54,10 +51,6 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         p.setSize(new Dimension(300,600));
         p.setBackground(new Color(255, 111, 0));
         frame.add(p);
-
-
-        //frame.pack();
-        //frame.show();
         frame.setVisible(true);
     }
 
@@ -69,11 +62,10 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
 
     }
 
-    //geen idee als dit goed is, momenteel wordt 1 pseudonym gemaakt maar mss handig als het voor een hele maand kan
     @Override
-    public String create_pseudonym(String name, String location) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        LocalDateTime now = LocalDateTime.now();
-        String data = name+","+now;
+    public byte[] create_pseudonym(String name, String location) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        int day = LocalDateTime.now().getDayOfMonth();
+        String data = name+","+day;
         //secret key voor catering facility
         HKDF hkdf = HKDF.fromHmacSha256();
         byte[] expandedKey = hkdf.expand(secret_key.getEncoded(), "aes-key".getBytes(StandardCharsets.UTF_8), 16);
@@ -85,16 +77,16 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         //pseudonym
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
         String encrypted_string = new String(encrypted);
-        String data2 = location + "," + now + "," + encrypted_string;
+        String data2 = location + "," + day + "," + encrypted_string;
         byte[] input = data2.getBytes();
         byte[] result = md.digest(input);
         pseudonymen.add(result);
-        return new String(result);
+        return result;
 
     }
 
     @Override
-    public ArrayList<ArrayList<Token>> get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public ArrayList<ArrayList<Token>> get_tokens(String phone_number) throws RemoteException, InvalidKeyException, SignatureException, NoSuchAlgorithmException {
         ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
         /*boolean got_tokens = false;
         for (String number : phone_numbers) {
@@ -109,10 +101,10 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             ArrayList<Token> tokensVoorDag = new ArrayList<>(AMOUNT_OF_TOKENS);
             Random random = new Random();
             int number;
-            LocalDateTime now = LocalDateTime.now();
             int day = i+1;
-            byte[] digitalSignature;
 
+            byte[] digitalSignature;
+            signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(privateKey);
 
             for (int j = 0; j < AMOUNT_OF_TOKENS; j++) {

@@ -2,10 +2,11 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -15,35 +16,40 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Main {
     Registry myRegistry;
     Registrar registrar;
+    int number;
 
     public Main() throws RemoteException, NotBoundException {
         myRegistry = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistry.lookup("Registrar");
     }
 
-    public String get_pseudonym(String name, String location) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        String pseudonym = registrar.create_pseudonym(name, location);
+    public byte[] get_pseudonym(String name, String location) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        byte[] pseudonym = registrar.create_pseudonym(name, location);
         return pseudonym;
     }
 
-    public BitMatrix generate_qrcode(String name, String pseudonym) throws NoSuchAlgorithmException, UnsupportedEncodingException, WriterException {
+    public BitMatrix generate_qrcode(String name, byte[] pseudonym) throws NoSuchAlgorithmException, WriterException, IOException {
         Random random = new Random();
-        int number = random.nextInt();
-        String data = pseudonym + "," +  number;
+        number = random.nextInt();
+        String data = number + "," + Arrays.toString(pseudonym);
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
-        byte[] hash = md.digest(data.getBytes(StandardCharsets.UTF_8));
+        byte[] bytedate = data.getBytes(StandardCharsets.UTF_8);
+        System.out.println(bytedate);
+        md.update(data.getBytes(StandardCharsets.UTF_8));
+        byte[] hash = md.digest();
         String result_string = number + "," + name + "," + new String(hash);
         System.out.println(number + "," + name + "," + hash);
         byte[] result = result_string.getBytes(StandardCharsets.UTF_8);
         return new MultiFormatWriter().encode(new String(result, StandardCharsets.UTF_8), BarcodeFormat.QR_CODE, 25, 25);
     }
 
-    public static void main(String args[]) throws NotBoundException, RemoteException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException, WriterException {
+    public static void main(String args[]) throws NotBoundException, IOException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, WriterException {
         Main main = new Main();
         int business_number = 164951;
         String name = "fried chicken";
@@ -64,7 +70,7 @@ public class Main {
         System.out.println("What is the phone number of your catering facility? ");
         phone_number = in.nextLine();*/
 
-        String pseudonym = main.get_pseudonym(name, location);
+        byte[] pseudonym = main.get_pseudonym(name, location);
         System.out.println(pseudonym);
 
         BitMatrix qrcode = main.generate_qrcode(name, pseudonym);

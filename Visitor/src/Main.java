@@ -6,9 +6,13 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.security.*;
@@ -16,6 +20,8 @@ import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Main {
     Registry myRegistryRegistrar;
@@ -38,6 +44,7 @@ public class Main {
     LocalTime localTime;
     Capsule capsule;
     usedToken usedToken;
+    boolean aanwezig = false;
 
 
     public Main() throws IOException, NotBoundException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, SignatureException, InvalidKeyException, KeyStoreException, CertificateException {
@@ -64,6 +71,27 @@ public class Main {
         phone_number = "0471283868";
         //enrollment_phase();
 
+        java.util.Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("timer werkt!");
+                if (aanwezig) {
+                    if (LocalTime.now().compareTo(gebruikteTokens.get(aantalBezoeken-1).getBeginTijd().plusSeconds(10)) > 0) {
+                        try {
+                            System.out.println("nieuwe token is verstuurd");
+                            capsule = new Capsule(LocalDateTime.now().toLocalTime(), tokensVandaag.get(aantalBezoeken), hash);
+                            mixingProxy.sendCapsule(capsule, phone_number);
+                            gebruikteTokens.add(new usedToken(LocalTime.now(), hash, random_number));
+                            aantalBezoeken++;
+                        } catch (RemoteException | IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | InvalidKeyException | NoSuchAlgorithmException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }, 0, 1000*30);
+
         JLabel textName = new JLabel();
         textName.setText("Name: " + name);
 
@@ -83,11 +111,10 @@ public class Main {
             barcode = barcodeField.getText();
             barcodeField.setText("");
             hash = barcode.split(",")[2];
-            capsule = new Capsule(LocalDateTime.now().toLocalTime(), tokensVandaag.get(aantalBezoeken), hash);
+            localTime = LocalTime.now();
+            capsule = new Capsule(localTime, tokensVandaag.get(aantalBezoeken), hash);
             random_number = Integer.parseInt(barcode.split(",")[0]);
             CF = barcode.split(",")[1];
-            localTime = LocalDateTime.now().toLocalTime();
-            aantalBezoeken++;
             try {
                 byte[] signedHash = mixingProxy.sendCapsule(capsule, phone_number);
                 Signature signature = Signature.getInstance("SHA256withRSA");
@@ -95,9 +122,11 @@ public class Main {
                 signature.update(hash.getBytes(StandardCharsets.UTF_8));
                 boolean signed = signature.verify(signedHash);
                 if (signed) {
+                    aantalBezoeken++;
                     System.out.println("Sign oke");
                     usedToken = new usedToken(localTime, hash, random_number);
                     gebruikteTokens.add(usedToken);
+                    aanwezig = true;
                     //identicon
                     BufferedImage image = Identicon.generateIdenticons(signedHash, 150,150);
                     File imageFile = new File("image.jpg");
@@ -114,6 +143,7 @@ public class Main {
 
         leave.addActionListener(e -> {
             System.out.println("Uit cafe");
+            aanwezig = false;
             for(usedToken usedToken: gebruikteTokens) {
                 usedToken.setEindTijd(LocalTime.now());
             }

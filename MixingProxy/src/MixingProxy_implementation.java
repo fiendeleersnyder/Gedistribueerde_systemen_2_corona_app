@@ -13,9 +13,6 @@ import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class MixingProxy_implementation extends UnicastRemoteObject implements MixingProxy{
     Registry myRegistry;
@@ -23,18 +20,20 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     PrivateKey privateKey;
     ArrayList<Token> usedTokens;
     ArrayList<Capsule> capsules;
-    JFrame frame;//= new JFrame("Mixing database");
-    JLabel text;// = new JLabel("Registrar database: ");
-    JPanel p;// = new JPanel();
+    JFrame frame;
+    JLabel text;
+    JPanel p;
+    ArrayList<JLabel> labels;
 
     public MixingProxy_implementation() throws IOException, NotBoundException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
         usedTokens = new ArrayList<>();
         capsules = new ArrayList<>();
+        labels = new ArrayList<>();
 
         myRegistry = LocateRegistry.getRegistry("localhost", 4500);
         registrar = (Registrar) myRegistry.lookup("Registrar");
         frame= new JFrame("Mixing database");
-        text = new JLabel("Registrar database: ");
+        text = new JLabel("Mixing database: ");
         p = new JPanel();
 
 
@@ -45,12 +44,22 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
         fis.close();
 
         privateKey = (PrivateKey) keyStore.getKey("mixingproxy","keystore".toCharArray());
-        frame.setSize(300,600);
+        frame.setSize(500,600);
         p.add(text);
         p.setSize(new Dimension(300,600));
         p.setBackground(new Color(235, 52, 183));
         frame.add(p);
         frame.setVisible(true);
+
+    }
+    public void updateGUI() {
+        if (!capsules.isEmpty()) {
+            JLabel capsule = new JLabel();
+            capsule.setText("LocalTime: " + capsules.get(capsules.size() - 1).getLocalTime() + " Token: " + capsules.get(capsules.size() - 1).getToken() + " Hash: " + capsules.get(capsules.size() - 1).getHash());
+            p.add(capsule);
+            labels.add(capsule);
+            frame.setVisible(true);
+        }
 
     }
 
@@ -72,6 +81,7 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
         else {
             usedTokens.add(capsule.getToken());
             capsules.add(capsule);
+            updateGUI();
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(privateKey);
             signature.update(capsule.getHash().getBytes(StandardCharsets.UTF_8));
@@ -88,6 +98,9 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
             temp.add(capsule);
         }
         capsules.clear();
+        for (JLabel label: labels) {
+            label.setText("");
+        }
         return temp;
     }
 }
