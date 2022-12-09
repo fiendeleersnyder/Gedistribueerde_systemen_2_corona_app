@@ -21,6 +21,7 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     Registrar registrar;
     PrivateKey privateKey;
     ArrayList<Token> usedTokens;
+    ArrayList<usedToken> infectedTokens;
     ArrayList<Capsule> capsules;
     JFrame frame;
     JLabel text;
@@ -119,5 +120,15 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     public ArrayList<Capsule> getCapsules() throws RemoteException {
         Collections.shuffle(capsules);
         return capsules;
+    }
+
+    @Override
+    public void sendInfectedTokens(ArrayList<usedToken> infectedInformed) throws RemoteException {
+        infectedTokens = infectedInformed;
+    }
+
+    @Override
+    public ArrayList<usedToken> getInfectedTokens() throws RemoteException {
+        return infectedTokens;
     }
 }

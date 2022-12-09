@@ -11,4 +11,6 @@ import java.util.ArrayList;
 public interface MixingProxy extends Remote {
     byte[] sendCapsule(Capsule capsule) throws RemoteException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, SignatureException;
     ArrayList<Capsule> getCapsules() throws RemoteException;
+    void sendInfectedTokens(ArrayList<usedToken> infectedInformed) throws RemoteException;
+    ArrayList<usedToken> getInfectedTokens() throws RemoteException;
 }

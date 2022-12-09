@@ -19,6 +19,7 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -33,7 +34,8 @@ public class Main {
     JFrame frame;// = new JFrame("Corona-app");
     ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
     ArrayList<Token> tokensVandaag;
-    ArrayList<usedToken> gebruikteTokens;
+    ArrayList<usedToken> gebruikteTokens; //moet om de zoveel dagen worden upgedate zodat de te oude worden verwijderd
+    ArrayList<usedToken> infectedInformed;
     int aantalBezoeken = 0;
     String name;
     String phone_number;
@@ -67,6 +69,7 @@ public class Main {
         certMixingProxy = keyStore.getCertificate("mixingproxy");
 
         gebruikteTokens = new ArrayList<>();
+        infectedInformed = new ArrayList<>();
 
         name= "Fien De Leersnyder";
         phone_number = "0471283868";
@@ -107,6 +110,7 @@ public class Main {
         JButton b = new JButton("submit");
         JButton leave = new JButton("Leave catering facility");
         JButton button = new JButton("Send log to doctor");
+        JButton infected = new JButton("Get capsulelist");
         JLabel imageLabel = new JLabel();
         b.addActionListener(e -> {
             barcode = barcodeField.getText();
@@ -188,8 +192,26 @@ public class Main {
             }
         });
 
+        infected.addActionListener(e -> {
+            try {
+                ArrayList<Capsule> criticalTuples = matchingService.getInfectedList();
+                //if gebruikteTokes = capsule.getToken ==> token op infected zetten en eventueel toevoegen aan een aparte lijst zodat deze naar de mixing kan gestuurd worden
+                for(Capsule capsule : criticalTuples){
+                    for(usedToken token : gebruikteTokens){
+                        if (Objects.equals(token.getHash(), capsule.getHash())){
+                            token.setInfected(true);
+                            infectedInformed.add(token);
+                        }
+                    }
+                }
+                mixingProxy.sendInfectedTokens(infectedInformed);
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+                System.out.println("Error occurred while trying to fetch the capsulelist. Try again.");
+            }
+        });
+
         JPanel panel = new JPanel();
-        panel.add(button);
         panel.setSize(new Dimension(150,600));
         panel.add(button);
         panel.add(infected);
