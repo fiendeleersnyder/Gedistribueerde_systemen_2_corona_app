@@ -27,6 +27,7 @@ public class Main {
     Registry myRegistryMixingProxy;
     Registrar registrar;
     MixingProxy mixingProxy;
+    MatchingService matchingService;
     java.security.cert.Certificate certMixingProxy;
     Doctor doctor;
     JFrame frame;// = new JFrame("Corona-app");
@@ -51,6 +52,7 @@ public class Main {
         registrar = (Registrar) myRegistryRegistrar.lookup("Registrar");
         myRegistryMixingProxy = LocateRegistry.getRegistry("localhost", 9000, new SslRMIClientSocketFactory());
         mixingProxy = (MixingProxy) myRegistryMixingProxy.lookup("MixingProxy");
+        matchingService = (MatchingService) myRegistryRegistrar.lookup("MatchingService");
         doctor = (Doctor) myRegistryRegistrar.lookup("Doctor");
         frame = new JFrame("Corona-app");
         frame.setSize(new Dimension(1000,600));
@@ -189,6 +191,8 @@ public class Main {
         JPanel panel = new JPanel();
         panel.add(button);
         panel.setSize(new Dimension(150,600));
+        panel.add(button);
+        panel.add(infected);
         panel.setBackground(Color.CYAN);
         frame.add(panel);
         frame.setVisible(true);
