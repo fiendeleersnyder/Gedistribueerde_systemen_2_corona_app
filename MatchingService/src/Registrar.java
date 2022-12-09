@@ -4,4 +4,5 @@ import java.util.ArrayList;
 
 public interface Registrar extends Remote {
     ArrayList<byte[]> getPseudonyms(int day) throws RemoteException;
+    void sendUninformedUsers(ArrayList<Capsule> uninformedUsers) throws RemoteException;
 }

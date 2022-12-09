@@ -24,9 +24,9 @@ public class usedToken implements Serializable {
     }
 
 
-    public boolean isInfected() { return informed; }
+    public boolean isInformed() { return informed; }
 
-    public void setInfected(boolean informed) { this.informed = informed; }
+    public void setInformed(boolean informed) { this.informed = informed; }
 
     public LocalDateTime getBeginTijd() { return beginTijd; }
 

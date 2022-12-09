@@ -23,8 +23,10 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     ArrayList<Capsule> capsules;
     ArrayList<Capsule> uninformedInfected;
     ArrayList<ArrayList<byte[]>> pseudonymen;
-    JFrame frame;//= new JFrame("Matching Service");
-    JButton b;// = new JButton("Flush mixing queue");
+    JFrame frame;
+    JButton b;
+    JButton informedlogs;
+    JButton uninformedUsers;
 
 
     public MatchingService_implementation() throws RemoteException, NotBoundException {
@@ -42,20 +44,43 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
             pseudonymen.add(new ArrayList<>());
         }
 
-        //opvragen van lijst van mixing die mixing heeft gekregen van user
-        //dit gedeelte moet misschien met een knop?
-        ArrayList<usedToken> infectedFromMixing = mixingProxy.getInfectedTokens();
-        for(usedToken used: infectedFromMixing){
-            //infectedTokens.add(used);
-            infectedTokens.remove(used);
-        }
-
         frame= new JFrame("Matching Service");
         JPanel panel = new JPanel();
         b = new JButton("Flush mixing queue");
         b.addActionListener(e -> {
             try {
                 getCapsules();
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        informedlogs = new JButton("Get informed logs");
+        informedlogs.addActionListener(e -> {
+            try {
+                ArrayList<usedToken> infectedFromMixing = mixingProxy.getInfectedTokens();
+                ArrayList<Capsule> verwijderCapsules = new ArrayList<>();
+                for(usedToken used: infectedFromMixing){
+                    for(Capsule capsule : uninformedInfected){
+                        for(usedToken token : infectedFromMixing){
+                            if (Objects.equals(token.getHash(), capsule.getHash())){
+                                verwijderCapsules.add(capsule);
+                            }
+                        }
+                    }
+                }
+                for (Capsule capsule: verwijderCapsules) {
+                    uninformedInfected.remove(capsule);
+                }
+            } catch (RemoteException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        uninformedUsers = new JButton("Get uninformed users");
+        uninformedUsers.addActionListener(e -> {
+            try {
+                registrar.sendUninformedUsers(uninformedInfected);
             } catch (RemoteException ex) {
                 ex.printStackTrace();
             }
@@ -77,6 +102,7 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         frame.setSize(300,300);
         b.setBounds(135,145,30,10);
         panel.add(b);
+        panel.add(informedlogs);
         frame.add( panel );
         frame.setVisible(true);
     }

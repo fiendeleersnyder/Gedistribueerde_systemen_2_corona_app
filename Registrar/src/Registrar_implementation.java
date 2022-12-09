@@ -28,7 +28,9 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     ArrayList<ArrayList<byte[]>> pseudonymen;
     JFrame frame;
     JLabel text;
+    JLabel uninformed;
     JPanel p;
+    JPanel panel;
 
     public Registrar_implementation() throws IOException, NoSuchAlgorithmException {
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
@@ -38,7 +40,10 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         publicKey = pair.getPublic();
         frame= new JFrame("Registrar database");
         text = new JLabel("Registrar database: ");
+        uninformed = new JLabel("Uninformed users: ");
         p = new JPanel();
+        panel = new JPanel();
+
 
         int keySize = 128;
         String cipher ="AES"; // gebruiken we AES of iets anders???
@@ -51,9 +56,12 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         for (int i = 0; i < 31; i++) {
             pseudonymen.add(new ArrayList<>());
         }
+
         frame.setSize(300,600);
         p.add(text);
-        p.setSize(new Dimension(300,600));
+        panel.add(uninformed);
+        p.setSize(new Dimension(300,300));
+        p.setSize(new Dimension(300,300));
         p.setBackground(new Color(255, 111, 0));
         frame.add(p);
         frame.setVisible(true);
@@ -67,8 +75,15 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
 
     }
 
+    public void setUninformedUser(String phone_number) {
+        JLabel user = new JLabel();
+        user.setText(phone_number);
+        p.add(user);
+        frame.setVisible(true);
+    }
+
     @Override
-    public byte[] create_pseudonym(String name, String location) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public byte[] create_pseudonym(String name, String location) throws RemoteException, NoSuchAlgorithmException {
         int day = LocalDateTime.now().getDayOfMonth();
         String data = name+","+day;
         //secret key voor catering facility
@@ -132,5 +147,18 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     public ArrayList<byte[]> getPseudonyms(int day) throws RemoteException {
         //hier lijst van pseudonumen returnen naar matching service
         return pseudonymen.get(day-1);
+    }
+
+    public void sendUninformedUsers(ArrayList<Capsule> uninformedUsers) {
+        for (Capsule capsule: uninformedUsers) {
+            for (Map.Entry<String,ArrayList<ArrayList<Token>>> entry : mapping.entrySet()){
+                for (Token token: entry.getValue().get(capsule.getLocalDateTime().getDayOfMonth()-1)) {
+                    if (Objects.equals(capsule.getToken(), token)) {
+                        setUninformedUser(entry.getKey());
+                    }
+                }
+            }
+        }
+
     }
 }

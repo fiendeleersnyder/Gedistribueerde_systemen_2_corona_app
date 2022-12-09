@@ -199,7 +199,7 @@ public class Main {
                 for(Capsule capsule : criticalTuples){
                     for(usedToken token : gebruikteTokens){
                         if (Objects.equals(token.getHash(), capsule.getHash())){
-                            token.setInfected(true);
+                            token.setInformed(true);
                             infectedInformed.add(token);
                         }
                     }

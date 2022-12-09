@@ -11,4 +11,5 @@ public interface Registrar extends Remote {
     ArrayList<ArrayList<Token>>get_tokens(String phone_number) throws RemoteException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, SignatureException;
     boolean checkValidity(Token token) throws RemoteException, NoSuchAlgorithmException, InvalidKeyException, SignatureException;
     ArrayList<byte[]> getPseudonyms(int day) throws RemoteException;
+    void sendUninformedUsers(ArrayList<Capsule> uninformedUsers) throws RemoteException;
 }
