@@ -46,7 +46,8 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         //dit gedeelte moet misschien met een knop?
         ArrayList<usedToken> infectedFromMixing = mixingProxy.getInfectedTokens();
         for(usedToken used: infectedFromMixing){
-            infectedTokens.add(used);
+            //infectedTokens.add(used);
+            infectedTokens.remove(used);
         }
 
         frame= new JFrame("Matching Service");
