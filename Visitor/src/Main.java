@@ -163,8 +163,16 @@ public class Main {
         p.add(leave);
         p.add(b);
         p.add(imageLabel);
-        p.setBackground(Color.RED);
+        p.setBackground(Color.GREEN);
         frame.add(p);
+
+        JPanel panel = new JPanel();
+        panel.setSize(new Dimension(150,600));
+        panel.add(button);
+        panel.add(infected);
+        panel.setBackground(Color.GREEN);
+        frame.add(panel);
+        frame.setVisible(true);
 
         button.addActionListener(e -> {
             try{
@@ -201,6 +209,7 @@ public class Main {
                         if (Objects.equals(token.getHash(), capsule.getHash())){
                             token.setInformed(true);
                             infectedInformed.add(token);
+                            changeGuiColor(p,panel);
                         }
                     }
                 }
@@ -211,13 +220,7 @@ public class Main {
             }
         });
 
-        JPanel panel = new JPanel();
-        panel.setSize(new Dimension(150,600));
-        panel.add(button);
-        panel.add(infected);
-        panel.setBackground(Color.CYAN);
-        frame.add(panel);
-        frame.setVisible(true);
+
 
         int dag = LocalDateTime.now().getDayOfMonth();
 
@@ -225,6 +228,12 @@ public class Main {
             tokens = registrar.get_tokens(phone_number);
         }
         tokensVandaag = tokens.get(dag-1);
+
+    }
+
+    private void changeGuiColor(JPanel p, JPanel panel) {
+        p.setBackground(Color.RED);
+        panel.setBackground(Color.RED);
 
     }
 
