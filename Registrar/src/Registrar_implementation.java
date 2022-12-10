@@ -58,7 +58,6 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         p.add(text);
         panel.add(uninformed);
         p.setSize(new Dimension(300,300));
-        p.setSize(new Dimension(300,300));
         p.setBackground(new Color(255, 111, 0));
         frame.add(p);
         frame.setVisible(true);
