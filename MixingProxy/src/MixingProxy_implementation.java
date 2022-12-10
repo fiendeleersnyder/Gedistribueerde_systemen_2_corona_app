@@ -39,10 +39,6 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
         text = new JLabel("Mixing database: ");
         p = new JPanel();
 
-        for (JLabel label: labels) {
-            label.setText("");
-        }
-
         java.util.Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -56,6 +52,7 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
                 for (Capsule capsule: deleteCapsules) {
                     capsules.remove(capsule);
                 }
+                updateGUI();
             }
         }, 1000*60*60*24, 1000*60*60*24);
 
@@ -67,21 +64,26 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
         fis.close();
 
         privateKey = (PrivateKey) keyStore.getKey("mixingproxy","keystore".toCharArray());
-        frame.setSize(500,600);
+        frame.setSize(1200,600);
         p.add(text);
-        p.setSize(new Dimension(300,600));
+        p.setSize(new Dimension(1100,600));
         p.setBackground(new Color(235, 52, 183));
         frame.add(p);
         frame.setVisible(true);
 
     }
     public void updateGUI() {
+        for (JLabel label: labels) {
+            label.setText("");
+        }
         if (!capsules.isEmpty()) {
-            JLabel capsule = new JLabel();
-            capsule.setText("LocalTime: " + capsules.get(capsules.size() - 1).getLocalDateTime() + " Token: " + capsules.get(capsules.size() - 1).getToken() + " Hash: " + capsules.get(capsules.size() - 1).getHash());
-            p.add(capsule);
-            labels.add(capsule);
-            frame.setVisible(true);
+            for (Capsule c: capsules) {
+                JLabel capsule = new JLabel();
+                capsule.setText("LocalTime: " + c.getLocalDateTime() + " Token: " + c.getToken() + " Hash: " + c.getHash() + "\n");
+                p.add(capsule);
+                labels.add(capsule);
+                frame.setVisible(true);
+            }
         }
 
     }

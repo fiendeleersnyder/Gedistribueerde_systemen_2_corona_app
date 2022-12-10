@@ -1,4 +1,3 @@
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -9,7 +8,7 @@ import java.security.SignatureException;
 import java.util.ArrayList;
 
 public interface MatchingService extends Remote {
-    void uploadFileToMatchingServer(byte[] mydata,  byte[] signature, PublicKey publicKey) throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException;
+    void uploadFileToMatchingServer(byte[] mydata, ArrayList<usedToken> gebruikteTokens, byte[] signature, PublicKey publicKey) throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException;
     //void sendCapsules(ArrayList<Capsule> capsules) throws RemoteException;
     ArrayList<Capsule> getInfectedList() throws RemoteException;
 }

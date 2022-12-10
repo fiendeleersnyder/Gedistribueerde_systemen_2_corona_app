@@ -18,6 +18,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 
 public class Main {
     Registry myRegistry;
@@ -38,8 +39,6 @@ public class Main {
         number = random.nextInt();
         String data = number + "," + Arrays.toString(pseudonym);
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
-        byte[] bytedate = data.getBytes(StandardCharsets.UTF_8);
-        System.out.println(bytedate);
         md.update(data.getBytes(StandardCharsets.UTF_8));
         byte[] hash = md.digest();
         String result_string = number + "," + name + "," + Arrays.toString(hash);
@@ -50,12 +49,12 @@ public class Main {
 
     public static void main(String args[]) throws NotBoundException, IOException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, WriterException {
         Main main = new Main();
-        int business_number = 164951;
-        String name = "fried chicken";
-        String location = "gent";
-        String phone_number = "0471648279";
+        int business_number;
+        String name;
+        String location;
+        String phone_number;
 
-        /*Scanner in = new Scanner(System.in);
+        Scanner in = new Scanner(System.in);
 
         System.out.println("What is the name of your catering facility? ");
         name = in.nextLine();
@@ -67,11 +66,9 @@ public class Main {
         business_number = Integer.parseInt(in.nextLine());
 
         System.out.println("What is the phone number of your catering facility? ");
-        phone_number = in.nextLine();*/
+        phone_number = in.nextLine();
 
         byte[] pseudonym = main.get_pseudonym(name, location);
-        System.out.println(Arrays.toString(pseudonym));
-        System.out.println(pseudonym);
 
         BitMatrix qrcode = main.generate_qrcode(name, pseudonym);
         System.out.println(qrcode);

@@ -24,10 +24,15 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     ArrayList<Capsule> uninformedInfected;
     ArrayList<ArrayList<byte[]>> pseudonymen;
     JFrame frame;
+    JPanel panel;
+    JPanel panel1;
+    JLabel text;
+    JLabel infected;
     JButton b;
     JButton informedlogs;
     JButton uninformedUsers;
-
+    ArrayList<JLabel> labels;
+    ArrayList<JLabel> labels2;
 
     public MatchingService_implementation() throws RemoteException, NotBoundException {
         myRegistryRegistrar = LocateRegistry.getRegistry("localhost", 4500);
@@ -43,9 +48,15 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         for (int i = 0; i < 31; i++) {
             pseudonymen.add(new ArrayList<>());
         }
+        labels = new ArrayList<>();
+        labels2 = new ArrayList<>();
 
         frame= new JFrame("Matching Service");
-        JPanel panel = new JPanel();
+        panel = new JPanel();
+        text = new JLabel("Capsules: ");
+        panel1 = new JPanel();
+        infected = new JLabel("Uninformed capsules");
+
         b = new JButton("Flush mixing queue");
         b.addActionListener(e -> {
             try {
@@ -59,18 +70,19 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         informedlogs.addActionListener(e -> {
             try {
                 ArrayList<usedToken> infectedFromMixing = mixingProxy.getInfectedTokens();
-                ArrayList<Capsule> verwijderCapsules = new ArrayList<>();
-                for(usedToken used: infectedFromMixing){
-                    for(Capsule capsule : uninformedInfected){
-                        for(usedToken token : infectedFromMixing){
-                            if (Objects.equals(token.getHash(), capsule.getHash())){
+                if (!infectedFromMixing.isEmpty()) {
+                    ArrayList<Capsule> verwijderCapsules = new ArrayList<>();
+                    for (usedToken used : infectedFromMixing) {
+                        for (Capsule capsule : uninformedInfected) {
+                            if (capsule.getToken().getRandomNumber() == used.getToken().getRandomNumber()){
                                 verwijderCapsules.add(capsule);
                             }
                         }
                     }
-                }
-                for (Capsule capsule: verwijderCapsules) {
-                    uninformedInfected.remove(capsule);
+                    for (Capsule capsule : verwijderCapsules) {
+                        uninformedInfected.remove(capsule);
+                    }
+                    updateUninformed();
                 }
             } catch (RemoteException ex) {
                 ex.printStackTrace();
@@ -81,6 +93,8 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         uninformedUsers.addActionListener(e -> {
             try {
                 registrar.sendUninformedUsers(uninformedInfected);
+                uninformedInfected.clear();
+                updateUninformed();
             } catch (RemoteException ex) {
                 ex.printStackTrace();
             }
@@ -99,15 +113,49 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         }, 1000*60*30, 1000*60*30);
 
 
-        frame.setSize(300,300);
+        frame.setSize(1300,600);
         b.setBounds(135,145,30,10);
         panel.add(b);
         panel.add(informedlogs);
-        frame.add( panel );
+        panel.add(uninformedUsers);
+        panel.add(text);
+        panel1.add(infected);
+        JSplitPane sl = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panel, panel1);
+        frame.add(sl);
         frame.setVisible(true);
     }
 
-    public void uploadFileToMatchingServer(byte[] mydata,  byte[] signature, PublicKey publicKey) throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public void updateGUI() {
+        for (JLabel label: labels) {
+            label.setText("");
+        }
+        if (!capsules.isEmpty()) {
+            for (Capsule c: capsules) {
+                JLabel capsule = new JLabel();
+                capsule.setText("LocalTime: " + c.getLocalDateTime() + " Token: " + c.getToken() + " Hash: " + c.getHash());
+                panel.add(capsule);
+                labels.add(capsule);
+            }
+            frame.setVisible(true);
+        }
+    }
+
+    public void updateUninformed() {
+        for (JLabel label: labels2) {
+            label.setText("");
+        }
+        if (!uninformedInfected.isEmpty()) {
+            for (Capsule c: uninformedInfected) {
+                JLabel capsule = new JLabel();
+                capsule.setText("LocalTime: " + c.getLocalDateTime() + " Token: " + c.getToken() + " Hash: " + c.getHash());
+                panel1.add(capsule);
+                labels2.add(capsule);
+            }
+            frame.setVisible(true);
+        }
+    }
+
+    public void uploadFileToMatchingServer(byte[] mydata, ArrayList<usedToken> gebruikteTokens, byte[] signature, PublicKey publicKey) throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         this.signatureDoctor = signature;
         this.publicKeyDoctor = publicKey;
         try {
@@ -133,7 +181,7 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
         boolean signed = sign.verify(signatureDoctor);
 
         if(signed){
-            System.out.println("Matching Service is done writing data...");
+            /*System.out.println("Matching Service is done writing data...");
             //hier log.txt uitlezen
             File file = new File("logMatchingService.txt");
             Scanner sc = new Scanner(file);
@@ -146,20 +194,18 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
                 int randomnummer = Integer.parseInt(split[4]);
                 System.out.println(begin + " " + eind + " " +hash + " "+ randomnummer);
                 infectedTokens.add(new usedToken(begin, eind, hash, randomnummer));
-            }
+            }*/
 
             int day;
             boolean valid = false;
             ArrayList<usedToken> unvalidTokens = new ArrayList<>();
-            for (usedToken token: infectedTokens) {
+            for (usedToken token: gebruikteTokens) {
                 day = token.getBeginTijd().getDayOfMonth();
                 if (pseudonymen.get(day-1).isEmpty()) {
                     pseudonymen.get(day-1).addAll(registrar.getPseudonyms(day));
                 }
                 for (byte[] pseudonym: pseudonymen.get(day-1)) {
-                    System.out.println(Arrays.toString(pseudonym));
                     byte[] gemaaktehash = makeHash(pseudonym, token.getRandomNumber());
-                    System.out.println(Arrays.toString(gemaaktehash));
                     if (Objects.equals(token.getHash(), Arrays.toString(gemaaktehash))) {
                         valid = true;
                         break;
@@ -176,21 +222,26 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
 
 
             if(capsules.size()!=0) {
-                for (usedToken token : infectedTokens) {
+                for (usedToken token : gebruikteTokens) {
+                    System.out.println(token.getBeginTijd() + " " + token.getEindTijd() + " " + token.getToken() + " " + token.getHash());
                     ArrayList<Capsule> temp = capsules;
                     Iterator<Capsule> iterator = temp.iterator();
                     while (iterator.hasNext()) {
                         Capsule capsule = iterator.next();
                         if (Objects.equals(token.getHash(), capsule.getHash())) {
                             if (checkTimeInterval(token.getBeginTijd(), token.getEindTijd(), capsule.getLocalDateTime())) {
-                                uninformedInfected.add(capsule);
-                                iterator.remove();
-                                System.out.println("found infected user");
+                                if (capsule.getToken().getRandomNumber() != token.getToken().getRandomNumber()) {
+                                    uninformedInfected.add(capsule);
+                                    iterator.remove();
+                                    System.out.println("found infected user");
+                                }
                             }
                         }
                     }
+                    token.setInformed(true);
                     capsules = temp;
                 }
+                updateUninformed();
             }
         }
         else System.out.println("An error occurred: the signature provided by the doctor and the signature" +
@@ -204,6 +255,7 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
 
     public void getCapsules() throws RemoteException {
         capsules = mixingProxy.getCapsules();
+        updateGUI();
     }
 
     public byte[] makeHash(byte[] pseudonym, int random) throws NoSuchAlgorithmException {
@@ -214,10 +266,6 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     }
 
     public boolean checkTimeInterval(LocalDateTime begin, LocalDateTime eind, LocalDateTime user) {
-        boolean inInterval = false;
-        if(begin.compareTo(user) <= 0 & eind.compareTo(user) >= 0){
-            inInterval = true;
-        }
-        return inInterval;
+        return begin.compareTo(user) <= 0 & eind.compareTo(user) >= 0;
     }
 }

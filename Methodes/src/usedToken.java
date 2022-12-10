@@ -4,20 +4,24 @@ import java.time.LocalDateTime;
 public class usedToken implements Serializable {
     private LocalDateTime beginTijd;
     private LocalDateTime eindTijd;
+    private Token token;
     private String hash;
     private int randomNumber;
     private boolean informed;
 
-    public usedToken(LocalDateTime beginTijd, String hash, int randomNumber) {
+    public usedToken(LocalDateTime beginTijd, Token token, String hash, int randomNumber) {
         this.beginTijd = beginTijd;
+        this.eindTijd = null;
+        this.token = token;
         this.hash = hash;
         this.randomNumber = randomNumber;
         this.informed = false;
     }
 
-    public usedToken(LocalDateTime beginTijd, LocalDateTime eindTijd, String hash, int randomNumber) {
+    public usedToken(LocalDateTime beginTijd, LocalDateTime eindTijd, Token token, String hash, int randomNumber) {
         this.beginTijd = beginTijd;
         this.eindTijd = eindTijd;
+        this.token = token;
         this.hash = hash;
         this.randomNumber = randomNumber;
         this.informed = false;
@@ -35,6 +39,10 @@ public class usedToken implements Serializable {
     public LocalDateTime getEindTijd() { return eindTijd; }
 
     public void setEindTijd(LocalDateTime eindTijd) { this.eindTijd = eindTijd; }
+
+    public Token getToken() { return token; }
+
+    public void setToken(Token token) { this.token = token; }
 
     public String getHash() {
         return hash;

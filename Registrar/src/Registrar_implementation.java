@@ -26,8 +26,11 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     JFrame frame;
     JLabel text;
     JLabel uninformed;
+    JLabel map;
     JPanel p;
     JPanel panel;
+    JPanel panel1;
+    ArrayList<JLabel> labels;
 
     public Registrar_implementation() throws IOException, NoSuchAlgorithmException {
         KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
@@ -38,8 +41,10 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         frame= new JFrame("Registrar database");
         text = new JLabel("Registrar database: ");
         uninformed = new JLabel("Uninformed users: ");
+        map = new JLabel("Mapping between phone_numbers and tokens");
         p = new JPanel();
         panel = new JPanel();
+        panel1 = new JPanel();
 
 
         int keySize = 128;
@@ -53,13 +58,20 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         for (int i = 0; i < 31; i++) {
             pseudonymen.add(new ArrayList<>());
         }
+        labels = new ArrayList<>();
 
-        frame.setSize(300,600);
-        p.add(text);
-        panel.add(uninformed);
+        frame.setSize(800,600);
+        panel.setSize(new Dimension(300,300));
+        panel.setBackground(new Color(255, 111, 0));
+        panel1.setBackground(new Color(255, 111, 0));
         p.setSize(new Dimension(300,300));
         p.setBackground(new Color(255, 111, 0));
-        frame.add(p);
+        p.add(text);
+        panel.add(uninformed);
+        panel1.add(map);
+        JSplitPane sl = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, p, panel);
+        JSplitPane sl1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, sl, panel1);
+        frame.add(sl1);
         frame.setVisible(true);
     }
 
@@ -74,8 +86,25 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     public void setUninformedUser(String phone_number) {
         JLabel user = new JLabel();
         user.setText(phone_number);
-        p.add(user);
+        panel.add(user);
         frame.setVisible(true);
+    }
+
+    public void updatemapping() {
+        for (JLabel label: labels) {
+            label.setText("");
+        }
+        if (!mapping.isEmpty()) {
+            JLabel capsule = new JLabel();
+            for (Map.Entry<String,ArrayList<ArrayList<Token>>> entry : mapping.entrySet()){
+                for (Token token: entry.getValue().get(LocalDateTime.now().getDayOfMonth()-1)) {
+                    capsule.setText("Phone_number: " + entry.getKey() + " Token: " + token);
+                    panel1.add(capsule);
+                    labels.add(capsule);
+                }
+            }
+            frame.setVisible(true);
+        }
     }
 
     @Override
@@ -116,10 +145,10 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             int number;
             int day = i+1;
 
-            byte[] digitalSignature;
             signature = Signature.getInstance("SHA256withRSA");
 
             for (int j = 0; j < AMOUNT_OF_TOKENS; j++) {
+                byte[] digitalSignature;
                 signature.initSign(privateKey);
                 number = random.nextInt();
                 signature.update((number + "," + day).getBytes());
@@ -131,6 +160,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         phone_numbers.add(phone_number);
         mapping.put(phone_number, tokens);
         updateGUI();
+        updatemapping();
         return tokens;
     }
 
@@ -149,7 +179,8 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         for (Capsule capsule: uninformedUsers) {
             for (Map.Entry<String,ArrayList<ArrayList<Token>>> entry : mapping.entrySet()){
                 for (Token token: entry.getValue().get(capsule.getLocalDateTime().getDayOfMonth()-1)) {
-                    if (Objects.equals(capsule.getToken(), token)) {
+                    if (capsule.getToken().getRandomNumber() == token.getRandomNumber()) {
+                        System.out.println("found the user");
                         setUninformedUser(entry.getKey());
                     }
                 }
