@@ -165,6 +165,7 @@ public class Main {
 
         leave.addActionListener(e -> {
             System.out.println("Uit cafe");
+            imageLabel.setIcon(null);
             aanwezig = false;
             for(usedToken usedToken: gebruikteTokens) {
                 if (usedToken.getEindTijd() == null) {

@@ -112,6 +112,20 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
             }
         }, 1000*60*30, 1000*60*30);
 
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                ArrayList<Capsule> deleteCapsule = new ArrayList<>();
+                for (Capsule capsule: capsules) {
+                    if (capsule.getLocalDateTime().plusMinutes(60*48).compareTo(LocalDateTime.now()) < 0) {
+                        deleteCapsule.add(capsule);
+                    }
+                }
+                for (Capsule capsule: deleteCapsule) {
+                    capsules.remove(capsule);
+                }
+            }
+        }, 1000*60*60*48, 1000*60*60*48);
 
         frame.setSize(1300,600);
         b.setBounds(135,145,30,10);
@@ -254,7 +268,7 @@ public class MatchingService_implementation extends UnicastRemoteObject implemen
     }
 
     public void getCapsules() throws RemoteException {
-        capsules = mixingProxy.getCapsules();
+        capsules.addAll(mixingProxy.getCapsules());
         updateGUI();
     }
 

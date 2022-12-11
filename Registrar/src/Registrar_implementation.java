@@ -11,6 +11,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.*;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.Timer;
 
 
 public class Registrar_implementation extends UnicastRemoteObject implements Registrar{
@@ -60,6 +61,16 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         }
         labels = new ArrayList<>();
 
+        java.util.Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (LocalDateTime.now().getDayOfMonth() == 1) {
+                    phone_numbers.clear();
+                }
+            }
+        }, 1000*60, 1000*60*60*24);
+
         frame.setSize(800,600);
         panel.setSize(new Dimension(300,300));
         panel.setBackground(new Color(255, 111, 0));
@@ -95,8 +106,8 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
             label.setText("");
         }
         if (!mapping.isEmpty()) {
-            JLabel capsule = new JLabel();
             for (Map.Entry<String,ArrayList<ArrayList<Token>>> entry : mapping.entrySet()){
+                JLabel capsule = new JLabel();
                 for (Token token: entry.getValue().get(LocalDateTime.now().getDayOfMonth()-1)) {
                     capsule.setText("Phone_number: " + entry.getKey() + " Token: " + token);
                     panel1.add(capsule);
@@ -130,7 +141,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
     @Override
     public ArrayList<ArrayList<Token>> get_tokens(String phone_number) throws RemoteException, InvalidKeyException, SignatureException, NoSuchAlgorithmException {
         ArrayList<ArrayList<Token>> tokens = new ArrayList<>();
-        /*boolean got_tokens = false;
+        boolean got_tokens = false;
         for (String number : phone_numbers) {
             if (phone_number.equalsIgnoreCase(number)) {
                 got_tokens = true;
@@ -138,7 +149,7 @@ public class Registrar_implementation extends UnicastRemoteObject implements Reg
         }
         if (got_tokens) {
             return null;
-        }*/
+        }
         for (int i = 0; i < DAYS; i++) {
             ArrayList<Token> tokensVoorDag = new ArrayList<>(AMOUNT_OF_TOKENS);
             Random random = new Random();

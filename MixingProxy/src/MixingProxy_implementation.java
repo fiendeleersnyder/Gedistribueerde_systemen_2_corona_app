@@ -121,7 +121,13 @@ public class MixingProxy_implementation extends UnicastRemoteObject implements M
     @Override
     public ArrayList<Capsule> getCapsules() throws RemoteException {
         Collections.shuffle(capsules);
-        return capsules;
+        ArrayList<Capsule> temp = new ArrayList<>();
+        for (Capsule capsule: capsules) {
+            temp.add(capsule);
+        }
+        capsules.clear();
+        updateGUI();
+        return temp;
     }
 
     @Override
